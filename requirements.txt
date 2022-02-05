@@ -1,0 +1,5 @@
+fastapi
+SQLAlchemy
+pydantic
+python-dotenv
+mysqlclient
