@@ -5,7 +5,7 @@ from app.database.database import Base
 
 
 class Character(Base):
-    __tablename__ = "users"
+    __tablename__ = "his_characters"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)

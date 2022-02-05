@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends
-from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.database.schemas.Character import Character as SchemeCharacter
