@@ -10,4 +10,3 @@ class Character(Base):
     name = Column(String, unique=True, index=True)
     description = Column(String)
     note = Column(String)
-    image = Column(String)
