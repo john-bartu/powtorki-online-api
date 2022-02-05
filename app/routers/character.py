@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -11,6 +13,11 @@ router = APIRouter(
 )
 
 
-@router.get("/{item_id}", response_model=SchemeCharacter)
+@router.get("/{item_id}")
 def get_character(item_id: int, db: Session = Depends(get_db)):
     return db.query(Character).filter(Character.id == item_id).first()
+
+
+@router.get("/")
+def get_character(db: Session = Depends(get_db)):
+    return db.query(Character).all()
