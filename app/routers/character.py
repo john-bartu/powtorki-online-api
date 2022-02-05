@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.database.database import get_db
 from app.database.schemas.Character import Character as SchemeCharacter
 from app.database.models.Character import Character
-from app.main import get_db
 
 router = APIRouter(
     prefix="/character",
