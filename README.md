@@ -8,7 +8,7 @@ OpenApi at:
 `/openapi.json`
 
 
-## Instalation
+## Installation
 Create new env python3.9 or python3.10
 
 `pip instal -r requirements.txt`
