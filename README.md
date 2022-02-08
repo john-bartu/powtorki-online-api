@@ -16,6 +16,10 @@ Create new env python3.9 or python3.10
 
 ## Run
 
-To run server from main directory type:
+To run development server from main directory type:
 
-`uvicorn app.main:app --reload `
+`uvicorn app.main:app --reload --header server:PowtorkiOnlineApi`
+
+To run production server from main directory type:
+
+`uvicorn app.main:app --workers 12 --header server:PowtorkiOnlineApi`
