@@ -13,21 +13,21 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[schemas.DbCharacter])
+@router.get("/")
 def get_characters(db: Session = Depends(get_db)):
     return CharacterCRUD.get_characters(db)
 
-
-@router.get("/{item_id}", response_model=schemas.DbCharacter)
-def get_character(item_id: int, db: Session = Depends(get_db)):
-    return CharacterCRUD.get_character(db, item_id)
-
-
-@router.post("/", response_model=schemas.DbCharacter)
-def create_character(character: schemas.CreateCharacter, db: Session = Depends(get_db)):
-    return CharacterCRUD.create_character(db, character)
-
-
-@router.put("/{item_id}", response_model=schemas.DbCharacter)
-def update_character(item_id: int, character: schemas.UpdateCharacter, db: Session = Depends(get_db)):
-    return CharacterCRUD.update_character(db, item_id, character)
+#
+# @router.get("/{item_id}", response_model=schemas.DbCharacter)
+# def get_character(item_id: int, db: Session = Depends(get_db)):
+#     return CharacterCRUD.get_character(db, item_id)
+#
+#
+# @router.post("/", response_model=schemas.DbCharacter)
+# def create_character(character: schemas.CreateCharacter, db: Session = Depends(get_db)):
+#     return CharacterCRUD.create_character(db, character)
+#
+#
+# @router.put("/{item_id}", response_model=schemas.DbCharacter)
+# def update_character(item_id: int, character: schemas.UpdateCharacter, db: Session = Depends(get_db)):
+#     return CharacterCRUD.update_character(db, item_id, character)
