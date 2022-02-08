@@ -1,7 +1,9 @@
+from urllib.request import Request
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.crud import CharacterCRUD
+from app.crud import character_crud
 from app.database.database import get_db
 
 router = APIRouter(
@@ -11,7 +13,7 @@ router = APIRouter(
 
 
 @router.get("/")
-def get_characters(db: Session = Depends(get_db)):
+def get_characters(request=Request, db: Session = Depends(get_db)):
     return CharacterCRUD.get_characters(db)
 
 #

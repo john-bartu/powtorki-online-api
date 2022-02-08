@@ -1,9 +1,9 @@
-from app.database.models.Date import Date
-from app.database.models.Page import (
+from app.database.models.date import Date
+from app.database.models.page import (
     Page,
     CharacterPage,
     CalendarPage,
     DocumentPage
 )
-from app.database.models.PageType import PageType
-from app.database.models.User import User
+from app.database.models.page_type import PageType
+from app.database.models.user import User

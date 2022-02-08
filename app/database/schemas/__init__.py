@@ -1,4 +1,4 @@
-from app.database.schemas.Character import (
+from app.database.schemas.character import (
     DbCharacter,
     UpdateCharacter,
     CreateCharacter
