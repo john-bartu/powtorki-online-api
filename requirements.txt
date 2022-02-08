@@ -3,3 +3,5 @@ SQLAlchemy
 pydantic
 python-dotenv
 mysqlclient
+fastapi-sessions
+python-multipart
