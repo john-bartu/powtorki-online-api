@@ -1,10 +1,24 @@
+import time
+from urllib.request import Request
+
 from fastapi import FastAPI
 
 from app.routers import character, date, document
 
-app = FastAPI(
+app = FastAPI()
 
-)
+
+def current_time_milis():
+    return time.time() * 1000
+
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = current_time_milis()
+    response = await call_next(request)
+    process_time = current_time_milis() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
 
 
 @app.get("/")
