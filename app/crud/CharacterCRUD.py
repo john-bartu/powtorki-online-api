@@ -2,7 +2,7 @@ from typing import List
 
 from sqlalchemy.orm import Session
 
-from app.database import models, schemas
+from app.database import models
 
 
 def get_character(db: Session, character_id: int) -> models.CharacterPage:

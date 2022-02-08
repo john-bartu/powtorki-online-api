@@ -1,3 +1,4 @@
+from app.database.models.Date import Date
 from app.database.models.Page import (
     Page,
     CharacterPage,
@@ -6,4 +7,3 @@ from app.database.models.Page import (
 )
 from app.database.models.PageType import PageType
 from app.database.models.User import User
-from app.database.models.Date import Date
