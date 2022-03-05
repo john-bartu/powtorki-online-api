@@ -8,4 +8,4 @@ def get_date(db: Session, page_id: int):
 
 
 def get_dates(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.CalendarPage).offset(skip).limit(limit).all()
+    return db.query(models.CalendarPage).offset(skip).pagination_limit(limit).all()

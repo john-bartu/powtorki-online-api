@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, contains_eager, joinedload
 
 from app.database import models
 
@@ -10,7 +10,12 @@ def get_character(db: Session, character_id: int) -> models.CharacterPage:
 
 
 def get_characters(db: Session, skip: int = 0, limit: int = 100) -> List[models.CharacterPage]:
-    return db.query(models.CharacterPage).offset(skip).limit(limit).all()
+    return db.query(models.CharacterPage) \
+        .options(joinedload(models.CharacterPage.taxonomies)) \
+        .filter(models.MapPageTaxonomy.id_taxonomy == 1) \
+        .offset(skip) \
+        .limit(limit) \
+        .all()
 
 #
 # def create_character(db: Session, character: schemas.CreateCharacter) -> models.CharacterPage:
