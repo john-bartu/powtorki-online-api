@@ -16,6 +16,8 @@ class Page(Base):
     time_creation = Column(String)
     time_edited = Column(String)
 
+    taxonomies = relationship("MapPageTaxonomy", uselist=True)
+
     __mapper_args__ = {
         'polymorphic_on': id_type,
         'polymorphic_identity': 1
