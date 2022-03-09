@@ -3,20 +3,18 @@ from urllib.request import Request
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.crud import character_crud
 from app.crud.item_lister import ItemLister
 from app.database import models
 from app.database.database import get_db
 
 router = APIRouter(
-    prefix="/character",
     tags=["character"],
 )
 
 
-@router.get("/")
-def get_characters(request=Request, db: Session = Depends(get_db)):
-    paginator = ItemLister(db, models.CharacterPage, 1)
+@router.get("/{subject}/character")
+def get_characters(subject: int | str, request=Request, db: Session = Depends(get_db)):
+    paginator = ItemLister(db, models.CharacterPage, subject)
     return paginator.get_items()
 
 #

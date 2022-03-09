@@ -7,11 +7,15 @@ from app.database.models import Page
 
 
 class ItemLister:
+    subject_mapper = {
+        'history': 1,
+        'civics': 2
+    }
 
-    def __init__(self, db: Session, model: Type[models.Page], subject, limit: int = 100) -> None:
+    def __init__(self, db: Session, model: Type[models.Page], subject_name, limit: int = 100) -> None:
         self.db = db
         self.model = model
-        self.subject = subject
+        self.subject_id = self.subject_mapper.get(subject_name)
         self.pagination_limit = limit
 
         super().__init__()
@@ -20,9 +24,11 @@ class ItemLister:
         return self.db.query(self.model).filter(getattr(self.model, 'id') == page_id).first()
 
     def get_items(self, pagination_no: int = 0) -> List[Page]:
+        print(getattr(self.model, 'taxonomies'))
         return self.db.query(self.model) \
+            .join(models.MapPageTaxonomy) \
             .options(joinedload(getattr(self.model, 'taxonomies'))) \
-            .filter(models.MapPageTaxonomy.id_taxonomy == 1) \
+            .filter(models.MapPageTaxonomy.id_taxonomy == self.subject_id) \
             .offset(self.pagination_limit * pagination_no) \
             .limit(self.pagination_limit) \
             .all()
