@@ -7,15 +7,11 @@ from app.database.models import Page
 
 
 class ItemLister:
-    subject_mapper = {
-        'history': 1,
-        'civics': 2
-    }
 
-    def __init__(self, db: Session, model: Type[models.Page], subject_name, limit: int = 100) -> None:
+    def __init__(self, db: Session, model: Type[models.Page], subject_id:int, limit: int = 100) -> None:
         self.db = db
         self.model = model
-        self.subject_id = self.subject_mapper.get(subject_name)
+        self.subject_id = subject_id
         self.pagination_limit = limit
 
         super().__init__()
