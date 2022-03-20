@@ -18,7 +18,7 @@ path_to_model = {
 
     # uzupelnienia
     'character': models.CharacterPage,
-    'word': models.DictionaryPage,
+    'dictionary': models.DictionaryPage,
     'date': models.CalendarPage,
 
     # sprawdz wiedze
@@ -33,7 +33,7 @@ subject_to_subject_id = {
 
 
 @router.get("/{subject}/{page_type}")
-def get_knowledge(subject: Union[int, str], page_type: str, db: Session = Depends(get_db)):
+def get_knowledge_list(subject: Union[int, str], page_type: str, db: Session = Depends(get_db)):
     if type(subject) is str:
         subject = subject_to_subject_id.get(subject)
 
@@ -47,3 +47,24 @@ def get_knowledge(subject: Union[int, str], page_type: str, db: Session = Depend
 
     paginator = ItemLister(db, model, subject)
     return paginator.get_items()
+
+
+@router.get("/{subject}/{page_type}/{page_id}")
+def get_knowledge_item(subject: Union[int, str], page_type: str, page_id: int, db: Session = Depends(get_db)):
+    if type(subject) is str:
+        subject = subject_to_subject_id.get(subject)
+
+    if subject not in subject_to_subject_id.values() or subject is None:
+        raise HTTPException(status_code=404, detail="Subject not found")
+
+    model = path_to_model.get(page_type)
+
+    if model is None:
+        raise HTTPException(status_code=404, detail="Knowledge type not found")
+
+    page = ItemLister(db, model, subject).get_item(page_id)
+
+    if page is None:
+        raise HTTPException(status_code=404, detail="Knowledge page not found")
+    else:
+        return page
