@@ -1,3 +1,5 @@
+from typing import Union
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -9,19 +11,19 @@ router = APIRouter()
 
 path_to_model = {
     # podstawowa
-    'lesson': models.Page,
+    'lesson': models.ScriptPage,
     # lesson_video
     'document': models.DocumentPage,
-    'mindmap': models.Page,
+    'mindmap': models.MindmapPage,
 
     # uzupelnienia
     'character': models.CharacterPage,
-    'word': models.Page,
+    'word': models.DictionaryPage,
     'date': models.CalendarPage,
 
     # sprawdz wiedze
-    'quiz': models.Page,
-    'qa': models.Page
+    'quiz': models.QuizPage,
+    'qa': models.QAPage
 }
 
 subject_to_subject_id = {
@@ -31,7 +33,7 @@ subject_to_subject_id = {
 
 
 @router.get("/{subject}/{page_type}")
-def get_knowledge(subject: int | str, page_type: str, db: Session = Depends(get_db)):
+def get_knowledge(subject: Union[int, str], page_type: str, db: Session = Depends(get_db)):
     if type(subject) is str:
         subject = subject_to_subject_id.get(subject)
 

@@ -30,6 +30,12 @@ class DocumentPage(Page):
     }
 
 
+class ScriptPage(Page):
+    __mapper_args__ = {
+        'polymorphic_identity': 3
+    }
+
+
 class CharacterPage(Page):
     __mapper_args__ = {
         'polymorphic_identity': 4
@@ -42,3 +48,29 @@ class CalendarPage(Page):
     }
 
     date = relationship("Date", back_populates="page", lazy='joined', uselist=False)
+
+
+class DictionaryPage(Page):
+    __mapper_args__ = {
+        'polymorphic_identity': 6
+    }
+
+
+class QAPage(Page):
+    __mapper_args__ = {
+        'polymorphic_identity': 7
+    }
+
+
+class QuizPage(Page):
+    __mapper_args__ = {
+        'polymorphic_identity': 8
+    }
+
+    answers = relationship("MapPageAnswer", uselist=True)
+
+
+class MindmapPage(Page):
+    __mapper_args__ = {
+        'polymorphic_identity': 9
+    }

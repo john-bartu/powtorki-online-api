@@ -4,7 +4,7 @@ from urllib.request import Request
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import character, date, document, knowledge, auth
+from app.routers import knowledge, auth
 
 app = FastAPI()
 

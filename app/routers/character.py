@@ -7,15 +7,15 @@ from app.crud.item_lister import ItemLister
 from app.database import models
 from app.database.database import get_db
 
-router = APIRouter(
-    tags=["character"],
-)
+# router = APIRouter(
+#     tags=["character"],
+# )
 
-
-@router.get("/{subject}/character")
-def get_characters(subject: int | str, request=Request, db: Session = Depends(get_db)):
-    paginator = ItemLister(db, models.CharacterPage, subject)
-    return paginator.get_items()
+#
+# @router.get("/{subject}/character")
+# def get_characters(subject: int | str, request=Request, db: Session = Depends(get_db)):
+#     paginator = ItemLister(db, models.CharacterPage, subject)
+#     return paginator.get_items()
 
 #
 # @router.get("/{item_id}", response_model=schemas.DbCharacter)
