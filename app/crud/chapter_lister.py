@@ -16,7 +16,7 @@ class TaxonomyLister:
         super().__init__()
 
     def get_item(self, taxonomy_id: int):
-        return self.db.query(self.model).filter(getattr(self.model, 'id') == taxonomy_id).first()
+        return self.db.query(self.model).filter(self.model.id == taxonomy_id).first()
 
     def get_items(self, pagination_no: int = 0) -> List[models.Page]:
         return self.db.query(self.model) \
