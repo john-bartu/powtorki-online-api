@@ -14,6 +14,9 @@ from app.database.models.page import (
 from app.database.models.page_type import PageType
 from app.database.models.taxonomy import (
     Taxonomy,
+    SubjectTaxonomy,
+    ChapterTaxonomy,
+    MapPageTaxonomy,
     MapPageTaxonomy,
     TaxonomyType
 )

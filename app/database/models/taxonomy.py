@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, PrimaryKeyConstraint
+from sqlalchemy.orm import relationship
 
 from app.database.database import Base
 
@@ -11,7 +12,6 @@ class MapPageTaxonomy(Base):
 
     __table_args__ = (
         PrimaryKeyConstraint(id_page, id_taxonomy),
-        {},
     )
 
 
@@ -19,8 +19,28 @@ class Taxonomy(Base):
     __tablename__ = "taxonomies"
 
     id = Column(Integer, primary_key=True, index=True)
-    id_type = Column(Integer, ForeignKey("taxonomy_types.id"))
+    id_parent = Column(Integer, ForeignKey("taxonomies.id"), nullable=True)
+    id_taxonomy_type = Column(Integer, ForeignKey("taxonomy_types.id"))
     name = Column(VARCHAR(60))
+
+    children = relationship('Taxonomy', uselist=True)
+
+    __mapper_args__ = {
+        'polymorphic_on': id_taxonomy_type,
+        'polymorphic_identity': 1
+    }
+
+
+class SubjectTaxonomy(Taxonomy):
+    __mapper_args__ = {
+        'polymorphic_identity': 2
+    }
+
+
+class ChapterTaxonomy(Taxonomy):
+    __mapper_args__ = {
+        'polymorphic_identity': 3
+    }
 
 
 class TaxonomyType(Base):
