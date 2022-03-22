@@ -39,8 +39,9 @@ def get_knowledge_list(subject: Union[int, str], db: Session = Depends(get_db)):
         subject = subject_to_taxonomy_id.get(subject)
 
     if subject not in subject_to_taxonomy_id.values() or subject is None:
-        raise HTTPException(status_code=404, detail="Subject not found")
+        raise HTTPException(status_code=404, detail="Knowledge subject not found")
 
+    # Assume to list only chapter taxonomies
     paginator = TaxonomyLister(db, models.ChapterTaxonomy, subject)
     return paginator.get_items()
 
@@ -51,7 +52,7 @@ def get_knowledge_list(subject: Union[int, str], page_type: str, db: Session = D
         subject = subject_to_taxonomy_id.get(subject)
 
     if subject not in subject_to_taxonomy_id.values() or subject is None:
-        raise HTTPException(status_code=404, detail="Subject not found")
+        raise HTTPException(status_code=404, detail="Knowledge subject not found")
 
     model = path_to_model.get(page_type)
 
@@ -68,7 +69,7 @@ def get_knowledge_item(subject: Union[int, str], page_type: str, page_id: int, d
         subject = subject_to_taxonomy_id.get(subject)
 
     if subject not in subject_to_taxonomy_id.values() or subject is None:
-        raise HTTPException(status_code=404, detail="Subject not found")
+        raise HTTPException(status_code=404, detail="Knowledge subject not found")
 
     model = path_to_model.get(page_type)
 
