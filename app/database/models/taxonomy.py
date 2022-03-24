@@ -22,6 +22,7 @@ class Taxonomy(Base):
     id_parent = Column(Integer, ForeignKey("taxonomies.id"), nullable=True)
     id_taxonomy_type = Column(Integer, ForeignKey("taxonomy_types.id"))
     name = Column(VARCHAR(60))
+    description = Column(VARCHAR(180))
 
     children = relationship('Taxonomy', uselist=True)
 
