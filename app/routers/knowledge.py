@@ -12,7 +12,7 @@ router = APIRouter()
 
 path_to_model = {
     # podstawowa
-    'lesson': models.ScriptPage,
+    'script': models.ScriptPage,
     # lesson_video
     'document': models.DocumentPage,
     'mindmap': models.MindmapPage,
