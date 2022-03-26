@@ -55,7 +55,7 @@ class CalendarPage(Page):
         'polymorphic_identity': 5
     }
 
-    date = relationship("Date", back_populates="page", lazy='joined', uselist=False)
+    date = relationship("Date", back_populates="page", uselist=False)
 
 
 class DictionaryPage(Page):
