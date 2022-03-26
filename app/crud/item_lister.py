@@ -19,12 +19,23 @@ class ItemLister:
         super().__init__()
 
     def get_item(self, page_id: int):
-        item = self.db.query(self.model).filter(getattr(self.model, 'id') == page_id).first()
 
-        if item.document:
-            item.document = page_renderer(item.document).strip()
+        if self.model is models.QuizPage:
+            item = (self.db.query(models.QuizPage)
+                    .options(joinedload(models.QuizPage.answers).joinedload(models.MapPageAnswer.answer))
+                    .filter(self.model.id == page_id).first())
 
-        return item
+            # if item.document:
+            #     item.document = page_renderer(item.document).strip()
+
+            return item
+        else:
+            item = self.db.query(self.model).filter(self.model.id == page_id).first()
+
+            if item.document:
+                item.document = page_renderer(item.document).strip()
+
+            return item
 
     def get_items(self, pagination_no: int = 0) -> List[models.Page]:
         if self.model is models.QuizPage:
