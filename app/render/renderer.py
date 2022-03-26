@@ -1,28 +1,20 @@
 import re
 
-from jinja2 import Template
 from sqlalchemy.orm import Session
 
-from app.database import models
 from app.database.database import get_db
+from app.database.models import DictionaryPage, CharacterPage, DocumentPage, CalendarPage, Media, ChapterTaxonomy
 
 session: Session = next(get_db())
 
 tables_mapping = {
-    'word': models.DictionaryPage,
-    'character': models.CharacterPage,
-    'document': models.DocumentPage,
-    'date': models.CalendarPage,
-    'img': models.Media,
-    'module': models.ChapterTaxonomy
+    'word': DictionaryPage,
+    'character': CharacterPage,
+    'document': DocumentPage,
+    'date': CalendarPage,
+    'img': Media,
+    'module': ChapterTaxonomy
 }
-
-
-def render_template(template, **context):
-    jinja2_template_string = open("templates/" + template, 'r').read()
-    template = Template(jinja2_template_string)
-    html_template_string = template.render(context)
-    return html_template_string
 
 
 def filter_database(table_name, column_name, value):

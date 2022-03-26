@@ -3,7 +3,7 @@ import json
 from sqlalchemy import Column, Integer, VARCHAR, String
 
 from app.database.database import Base
-from app.renderer import render_template
+from app.render.templater import render_template
 
 
 class Media(Base):

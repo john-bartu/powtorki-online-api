@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, VARCHAR, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
-from app.database.models.media import render_template
+from app.render.templater import render_template
 
 
 class Page(Base):

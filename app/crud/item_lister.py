@@ -3,7 +3,7 @@ from typing import List, Type
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import models
-from app.renderer import page_renderer
+from app.render.renderer import page_renderer
 
 
 class ItemLister:
@@ -21,7 +21,8 @@ class ItemLister:
     def get_item(self, page_id: int):
         item = self.db.query(self.model).filter(getattr(self.model, 'id') == page_id).first()
 
-        item.document = page_renderer(item.document).strip()
+        if item.document:
+            item.document = page_renderer(item.document).strip()
 
         return item
 
