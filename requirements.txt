@@ -5,3 +5,4 @@ python-dotenv
 mysqlclient
 fastapi-sessions
 python-multipart
+Jinja2
