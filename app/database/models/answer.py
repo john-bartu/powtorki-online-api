@@ -16,6 +16,16 @@ class MapPageAnswer(Base):
     answer = relationship("Answer", uselist=False)
 
 
+class PageAnswer(Base):
+    __tablename__ = "v_page_quiz_answers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    id_question = Column(Integer, ForeignKey("pages.id"))
+    id_answer = Column(Integer, ForeignKey("answers.id"))
+    is_correct = Column(Integer)
+    answer = Column(VARCHAR(255))
+
+
 class Answer(Base):
     __tablename__ = "answers"
 
