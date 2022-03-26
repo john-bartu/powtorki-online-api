@@ -3,6 +3,7 @@ import json
 from sqlalchemy import Column, Integer, VARCHAR, String
 
 from app.database.database import Base
+from app.renderer import render_template
 
 
 class Media(Base):
@@ -19,6 +20,9 @@ class Media(Base):
 
     time_creation = Column(String)
     time_edited = Column(String)
+
+    def format(self):
+        return render_template('image-box.html', SOURCE=self.path)
 
     def __repr__(self):
         filter_names = ['id', 'name', 'description', 'path', 'author', 'licence', 'slug', 'mime_type']

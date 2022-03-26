@@ -1,9 +1,10 @@
 import re
 
+from jinja2 import Template
 from sqlalchemy.orm import Session
 
+from app.database import models
 from app.database.database import get_db
-from database import models
 
 session: Session = next(get_db())
 
@@ -17,11 +18,18 @@ tables_mapping = {
 }
 
 
+def render_template(template, **context):
+    jinja2_template_string = open("templates/" + template, 'r').read()
+    template = Template(jinja2_template_string)
+    html_template_string = template.render(context)
+    return html_template_string
+
+
 def filter_database(table_name, column_name, value):
     # print(table_name, column_name, value)
 
     if table_name == "img" and column_name == "id":
-        column_name = "id_str"
+        column_name = "slug"
 
     filters = {column_name: value}
 
@@ -76,7 +84,7 @@ def image_converter(content):
     return result
 
 
-def document_converter(content):
+def page_renderer(content):
     pattern = r'\[(.*?)\]'
     resp = re.sub(pattern, lambda m: func(m.group(1)), content)
     return resp

@@ -4,6 +4,7 @@ from sqlalchemy import Column, Integer, String, VARCHAR, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
+from app.database.models.media import render_template
 
 
 class Page(Base):
@@ -49,6 +50,9 @@ class CharacterPage(Page):
         'polymorphic_identity': 4
     }
 
+    def format(self):
+        return render_template('character-box.html', NAME=self.title, DESCRIPTION=self.description)
+
 
 class CalendarPage(Page):
     __mapper_args__ = {
@@ -57,11 +61,17 @@ class CalendarPage(Page):
 
     date = relationship("Date", back_populates="page", uselist=False)
 
+    def format(self):
+        return render_template('calendar-box.html', NAME=self.title, DESCRIPTION=self.description)
+
 
 class DictionaryPage(Page):
     __mapper_args__ = {
         'polymorphic_identity': 6
     }
+
+    def format(self):
+        return render_template('dictionary-box.html', NAME=self.title, DESCRIPTION=self.description)
 
 
 class QAPage(Page):

@@ -3,6 +3,7 @@ from typing import List, Type
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import models
+from app.renderer import page_renderer
 
 
 class ItemLister:
@@ -18,7 +19,11 @@ class ItemLister:
         super().__init__()
 
     def get_item(self, page_id: int):
-        return self.db.query(self.model).filter(getattr(self.model, 'id') == page_id).first()
+        item = self.db.query(self.model).filter(getattr(self.model, 'id') == page_id).first()
+
+        item.document = page_renderer(item.document).strip()
+
+        return item
 
     def get_items(self, pagination_no: int = 0) -> List[models.Page]:
         if self.model is models.QuizPage:
