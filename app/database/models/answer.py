@@ -11,11 +11,13 @@ class MapPageAnswer(Base):
     id_question = Column(Integer, ForeignKey("pages.id"))
     id_answer = Column(Integer, ForeignKey("answers.id"))
     is_correct = Column(Integer)
-    answer = relationship("Answer", lazy='joined')
+
+    page = relationship("Page", uselist=False)
+    answer = relationship("Answer", uselist=False)
 
 
 class Answer(Base):
     __tablename__ = "answers"
 
     id = Column(Integer, primary_key=True, index=True)
-    answer = Column(VARCHAR(100))
+    answer = Column(VARCHAR(255))

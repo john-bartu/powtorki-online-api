@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, PrimaryKeyConstraint
+import json
+
+from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, PrimaryKeyConstraint, String
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
@@ -9,6 +11,8 @@ class MapPageTaxonomy(Base):
 
     id_page = Column(Integer, ForeignKey("pages.id"))
     id_taxonomy = Column(Integer, ForeignKey("taxonomies.id"))
+
+    taxonomy = relationship('Taxonomy', uselist=False)
 
     __table_args__ = (
         PrimaryKeyConstraint(id_page, id_taxonomy),
@@ -26,10 +30,17 @@ class Taxonomy(Base):
 
     children = relationship('Taxonomy', uselist=True)
 
+    time_creation = Column(String)
+    time_edited = Column(String)
+
     __mapper_args__ = {
         'polymorphic_on': id_taxonomy_type,
         'polymorphic_identity': 1
     }
+
+    def __repr__(self):
+        filter_names = ['id', 'id_parent', 'id_taxonomy_type', 'name', 'description']
+        return json.dumps({index: str(value) if index in filter_names else "" for index, value in vars(self).items()})
 
 
 class SubjectTaxonomy(Taxonomy):
@@ -41,6 +52,36 @@ class SubjectTaxonomy(Taxonomy):
 class ChapterTaxonomy(Taxonomy):
     __mapper_args__ = {
         'polymorphic_identity': 3
+    }
+
+
+class CalendarTaxonomy(Taxonomy):
+    __mapper_args__ = {
+        'polymorphic_identity': 4
+    }
+
+
+class CharacterTaxonomy(Taxonomy):
+    __mapper_args__ = {
+        'polymorphic_identity': 5
+    }
+
+
+class DictionaryTaxonomy(Taxonomy):
+    __mapper_args__ = {
+        'polymorphic_identity': 6
+    }
+
+
+class QuizTaxonomy(Taxonomy):
+    __mapper_args__ = {
+        'polymorphic_identity': 7
+    }
+
+
+class QATaxonomy(Taxonomy):
+    __mapper_args__ = {
+        'polymorphic_identity': 8
     }
 
 

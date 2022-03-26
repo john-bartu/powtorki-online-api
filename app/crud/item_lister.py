@@ -7,11 +7,13 @@ from app.database import models
 
 class ItemLister:
 
-    def __init__(self, db: Session, model: Type[models.Page], subject_id: int, limit: int = 100) -> None:
+    def __init__(self, db: Session, model: Type[models.Page], subject_id: int, chapter: int = None,
+                 limit: int = 100) -> None:
         self.db = db
         self.model = model
         self.subject_id = subject_id
         self.pagination_limit = limit
+        self.chapter_id = chapter
 
         super().__init__()
 
@@ -28,7 +30,7 @@ class ItemLister:
                 .join(models.Answer) \
                 .options(contains_eager(getattr(self.model, 'taxonomies'))) \
                 .options(contains_eager(getattr(self.model, 'answers')).contains_eager(models.MapPageAnswer.answer)) \
-                .filter(models.MapPageTaxonomy.id_taxonomy == self.subject_id) \
+                .filter(models.MapPageTaxonomy.id_taxonomy == self.chapter_id) \
                 .offset(self.pagination_limit * pagination_no) \
                 .limit(self.pagination_limit) \
                 .all()
@@ -36,7 +38,7 @@ class ItemLister:
             return self.db.query(self.model) \
                 .join(models.MapPageTaxonomy) \
                 .options(joinedload(getattr(self.model, 'taxonomies'))) \
-                .filter(models.MapPageTaxonomy.id_taxonomy == self.subject_id) \
+                .filter(models.MapPageTaxonomy.id_taxonomy == self.chapter_id) \
                 .offset(self.pagination_limit * pagination_no) \
                 .limit(self.pagination_limit) \
                 .all()

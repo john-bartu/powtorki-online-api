@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import Column, Integer, String, VARCHAR, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -10,9 +12,11 @@ class Page(Base):
     id = Column(Integer, primary_key=True, index=True)
     id_author = Column(Integer, ForeignKey("users.id"))
     id_type = Column(Integer, ForeignKey("page_types.id"))
-    title = Column(VARCHAR(60))
+    title = Column(VARCHAR(255))
     document = Column(String)
-    description = Column(VARCHAR(150))
+    description = Column(VARCHAR(255))
+    note = Column(VARCHAR(255))
+
     time_creation = Column(String)
     time_edited = Column(String)
 
@@ -22,6 +26,10 @@ class Page(Base):
         'polymorphic_on': id_type,
         'polymorphic_identity': 1
     }
+
+    def __repr__(self):
+        filter_names = ['id', 'id_author', 'id_type', 'title', 'document', 'description', 'note']
+        return json.dumps({index: str(value) if index in filter_names else "" for index, value in vars(self).items()})
 
 
 class DocumentPage(Page):

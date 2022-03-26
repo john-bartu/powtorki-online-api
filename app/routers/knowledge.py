@@ -47,7 +47,7 @@ def get_knowledge_list(subject: Union[int, str], db: Session = Depends(get_db)):
 
 
 @router.get("/{subject}/{page_type}")
-def get_knowledge_list(subject: Union[int, str], page_type: str, db: Session = Depends(get_db)):
+def get_knowledge_list(subject: Union[int, str], page_type: str, chapter: int = None, db: Session = Depends(get_db)):
     if type(subject) is str:
         subject = subject_to_taxonomy_id.get(subject)
 
@@ -59,7 +59,7 @@ def get_knowledge_list(subject: Union[int, str], page_type: str, db: Session = D
     if model is None:
         raise HTTPException(status_code=404, detail="Knowledge type not found")
 
-    paginator = ItemLister(db, model, subject)
+    paginator = ItemLister(db, model, subject, chapter)
     return paginator.get_items()
 
 

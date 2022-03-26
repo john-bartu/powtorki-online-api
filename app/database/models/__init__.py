@@ -17,7 +17,12 @@ from app.database.models.taxonomy import (
     SubjectTaxonomy,
     ChapterTaxonomy,
     MapPageTaxonomy,
-    MapPageTaxonomy,
+    QATaxonomy,
+    QuizTaxonomy,
+    CharacterTaxonomy,
+    DictionaryTaxonomy,
+    CalendarTaxonomy,
     TaxonomyType
 )
 from app.database.models.user import User
+from app.database.models.media import Media
