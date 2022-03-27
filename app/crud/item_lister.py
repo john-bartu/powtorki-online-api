@@ -22,20 +22,16 @@ class ItemLister:
 
         if self.model is models.QuizPage:
             item = (self.db.query(models.QuizPage)
-                    .options(joinedload(models.QuizPage.answers).joinedload(models.MapPageAnswer.answer))
+                    .options(joinedload(models.QuizPage.answers)
+                             .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer))
                     .filter(self.model.id == page_id).first())
-
-            # if item.document:
-            #     item.document = page_renderer(item.document).strip()
-
-            return item
         else:
             item = self.db.query(self.model).filter(self.model.id == page_id).first()
 
-            if item.document:
-                item.document = page_renderer(item.document).strip()
+        if item.document:
+            item.document = page_renderer(item.document).strip()
 
-            return item
+        return item
 
     def get_items(self, pagination_no: int = 0) -> List[models.Page]:
         if self.model is models.QuizPage:

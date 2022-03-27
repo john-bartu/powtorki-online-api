@@ -85,7 +85,8 @@ class QuizPage(Page):
         'polymorphic_identity': 8
     }
 
-    answers = relationship("MapPageAnswer", uselist=True)
+    map_answers = relationship("MapPageAnswer", uselist=True)
+    answers = relationship("PageAnswer", uselist=True)
 
 
 class MindmapPage(Page):

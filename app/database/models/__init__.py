@@ -1,4 +1,4 @@
-from app.database.models.answer import MapPageAnswer, Answer
+from app.database.models.answer import MapPageAnswer, Answer, PageAnswer
 from app.database.models.date import Date
 from app.database.models.page import (
     Page,
