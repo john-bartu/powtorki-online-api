@@ -82,3 +82,13 @@ def get_knowledge_item(subject: Union[int, str], page_type: str, page_id: int, d
         raise HTTPException(status_code=404, detail="Knowledge page not found")
     else:
         return page
+
+
+# @router.post("/", response_model=schemas.DbCharacter)
+# def create_character(character: schemas.CreateCharacter, db: Session = Depends(get_db)):
+#     return character_crud.create_character(db, character)
+#
+#
+# @router.put("/{item_id}", response_model=schemas.DbCharacter)
+# def update_character(item_id: int, character: schemas.UpdateCharacter, db: Session = Depends(get_db)):
+#     return character_crud.update_character(db, item_id, character)
