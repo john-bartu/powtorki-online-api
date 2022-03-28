@@ -43,6 +43,8 @@ class ItemLister:
                     .join(models.MapPageTaxonomy)
                     .join(models.QuizTaxonomy)
                     .options(joinedload(self.model.taxonomies))
+                    .options(joinedload(models.QuizPage.answers)
+                             .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer))
                     .filter(models.QuizTaxonomy.id_parent == self.chapter_id)
                     .order_by(models.QuizPage.title)
                     .offset(self.pagination_limit * pagination_no)
