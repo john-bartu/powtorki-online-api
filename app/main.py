@@ -4,7 +4,7 @@ from urllib.request import Request
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import knowledge, auth
+from app.routers import knowledge, auth, quiz
 
 app = FastAPI()
 
@@ -37,8 +37,6 @@ def read_root():
     return {"status": "ok"}
 
 
-# app.include_router(character.router)
-# app.include_router(date.router)
-# app.include_router(document.router)
-app.include_router(knowledge.router)
 app.include_router(auth.router)
+app.include_router(quiz.router)
+app.include_router(knowledge.router)

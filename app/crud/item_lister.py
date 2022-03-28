@@ -1,3 +1,4 @@
+from random import shuffle
 from typing import List, Type
 
 from sqlalchemy.orm import Session, joinedload
@@ -25,6 +26,8 @@ class ItemLister:
                     .options(joinedload(models.QuizPage.answers)
                              .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer))
                     .filter(self.model.id == page_id).first())
+
+            shuffle(item.answers)
         else:
             item = self.db.query(self.model).filter(self.model.id == page_id).first()
 
