@@ -38,18 +38,22 @@ class ItemLister:
 
     def get_items(self, pagination_no: int = 0) -> List[models.Page]:
         if self.model is models.QuizPage:
-            return (
-                self.db.query(self.model)
-                    .join(models.MapPageTaxonomy)
-                    .join(models.QuizTaxonomy)
-                    .options(joinedload(self.model.taxonomies))
-                    .options(joinedload(models.QuizPage.answers)
-                             .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer))
-                    .filter(models.QuizTaxonomy.id_parent == self.chapter_id)
-                    .order_by(models.QuizPage.title)
-                    .offset(self.pagination_limit * pagination_no)
-                    .limit(self.pagination_limit)
-            ).all()
+            quizzes = (self.db.query(self.model)
+                       .join(models.MapPageTaxonomy)
+                       .join(models.QuizTaxonomy)
+                       .options(joinedload(self.model.taxonomies))
+                       .options(joinedload(models.QuizPage.answers)
+                                .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer))
+                       .filter(models.QuizTaxonomy.id_parent == self.chapter_id)
+                       .order_by(models.QuizPage.title)
+                       .offset(self.pagination_limit * pagination_no)
+                       .limit(self.pagination_limit)
+                       ).all()
+
+            for quiz in quizzes:
+                shuffle(quiz.answers)
+
+            return quizzes
         elif self.model is models.CalendarPage:
             return (
                 self.db.query(self.model)
