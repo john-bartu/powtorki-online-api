@@ -45,6 +45,14 @@ class ScriptPage(Page):
     }
 
 
+class VideoScriptPage(ScriptPage):
+    __mapper_args__ = {
+        'polymorphic_identity': 10
+    }
+
+    media = relationship("PageMedia", uselist=True)
+
+
 class CharacterPage(Page):
     __mapper_args__ = {
         'polymorphic_identity': 4

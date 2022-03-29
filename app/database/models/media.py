@@ -1,9 +1,32 @@
 import json
 
-from sqlalchemy import Column, Integer, VARCHAR, String
+from sqlalchemy import Column, Integer, VARCHAR, String, ForeignKey
+from sqlalchemy.orm import relationship
 
 from app.database.database import Base
 from app.render.templater import render_template
+
+
+class PageMedia(Base):
+    __tablename__ = "v_page_media"
+
+    id = Column(Integer, primary_key=True, index=True)
+    id_page = Column(Integer, ForeignKey("pages.id"))
+    id_media = Column(Integer, ForeignKey("media.id"))
+    name = Column(VARCHAR(80))
+    path = Column(VARCHAR(255))
+    mime_type = Column(VARCHAR(30))
+
+
+class MapPageMedia(Base):
+    __tablename__ = "map_page_media"
+
+    id = Column(Integer, primary_key=True, index=True)
+    id_page = Column(Integer, ForeignKey("pages.id"))
+    id_media = Column(Integer, ForeignKey("media.id"))
+
+    media = relationship('Media', uselist=False)
+    page = relationship('Page', uselist=False)
 
 
 class Media(Base):

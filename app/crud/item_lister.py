@@ -1,7 +1,7 @@
 from random import shuffle
 from typing import List, Type
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
 from app.database import models
 from app.render.renderer import page_renderer
@@ -28,6 +28,11 @@ class ItemLister:
                     .filter(self.model.id == page_id).first())
 
             shuffle(item.answers)
+        elif self.model is models.ScriptPage:
+            item = (self.db.query(self.model)
+                    .options(selectin_polymorphic(models.ScriptPage, [models.VideoScriptPage]),
+                             joinedload(models.VideoScriptPage.media))
+                    .filter(self.model.id == page_id)).first()
         else:
             item = self.db.query(self.model).filter(self.model.id == page_id).first()
 
