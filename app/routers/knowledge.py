@@ -47,7 +47,7 @@ def get_knowledge_list(subject: Union[int, str], db: Session = Depends(get_db)):
 
 
 @router.get("/{subject}/{page_type}")
-def get_knowledge_list(subject: Union[int, str], page_type: str, chapter: int = None, db: Session = Depends(get_db)):
+def get_knowledge_list(subject: Union[int, str], page_type: str, chapter: int = None, page_no: int = 0, db: Session = Depends(get_db)):
     if type(subject) is str:
         subject = subject_to_taxonomy_id.get(subject)
 
@@ -60,7 +60,7 @@ def get_knowledge_list(subject: Union[int, str], page_type: str, chapter: int = 
         raise HTTPException(status_code=404, detail="Knowledge type not found")
 
     paginator = ItemLister(db, model, subject, chapter)
-    return paginator.get_items()
+    return paginator.get_items(page_no)
 
 
 @router.get("/{subject}/{page_type}/{page_id}")
@@ -82,7 +82,6 @@ def get_knowledge_item(subject: Union[int, str], page_type: str, page_id: int, d
         raise HTTPException(status_code=404, detail="Knowledge page not found")
     else:
         return page
-
 
 # @router.post("/", response_model=schemas.DbCharacter)
 # def create_character(character: schemas.CreateCharacter, db: Session = Depends(get_db)):

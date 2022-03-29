@@ -10,7 +10,7 @@ from app.render.renderer import page_renderer
 class ItemLister:
 
     def __init__(self, db: Session, model: Type[models.Page], subject_id: int, chapter: int = None,
-                 limit: int = 150) -> None:
+                 limit: int = 25) -> None:
         self.db = db
         self.model = model
         self.subject_id = subject_id
@@ -63,6 +63,16 @@ class ItemLister:
                     .options(joinedload(models.CalendarPage.date))
                     .filter(models.MapPageTaxonomy.id_taxonomy == self.chapter_id)
                     .order_by(models.Date.date_number)
+                    .offset(self.pagination_limit * pagination_no)
+                    .limit(self.pagination_limit)
+            ).all()
+        elif self.model is models.CharacterPage and self.subject_id == 2:
+            return (
+                self.db.query(self.model)
+                    .options(joinedload(getattr(self.model, 'taxonomies')))
+                    .filter(models.CharacterTaxonomy.id_parent == self.subject_id)
+                    .join(models.MapPageTaxonomy)
+                    .order_by(self.model.title)
                     .offset(self.pagination_limit * pagination_no)
                     .limit(self.pagination_limit)
             ).all()
