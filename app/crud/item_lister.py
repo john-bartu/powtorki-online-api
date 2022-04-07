@@ -87,7 +87,7 @@ class ItemLister:
                     .options(joinedload(getattr(self.model, 'taxonomies')))
                     .filter(models.MapPageTaxonomy.id_taxonomy == self.chapter_id)
                     .join(models.MapPageTaxonomy)
-                    .order_by(self.model.title)
+                    .order_by(self.model.order_no)
                     .offset(self.pagination_limit * pagination_no)
                     .limit(self.pagination_limit)
             ).all()
