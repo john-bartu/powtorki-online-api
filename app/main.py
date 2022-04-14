@@ -8,7 +8,7 @@ from app.routers import knowledge, auth, quiz
 
 app = FastAPI()
 
-origins = ["*"]
+origins = ["https://platforma.powtorkionline.pl"]
 
 app.add_middleware(
     CORSMiddleware,
