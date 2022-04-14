@@ -76,7 +76,7 @@ class ItemLister:
                 # In Civics list all characters in this subject for all taxonomies
                 return (
                     self.db.query(self.model)
-                        .options(joinedload(getattr(self.model, 'taxonomies')))
+                        .options(joinedload(self.model.taxonomies))
                         .filter(models.CharacterTaxonomy.id_parent == self.subject_id)
                         .join(models.MapPageTaxonomy)
                         .order_by(models.CharacterPage.title)
@@ -86,7 +86,7 @@ class ItemLister:
             else:
                 return (
                     self.db.query(self.model)
-                        .options(joinedload(getattr(self.model, 'taxonomies')))
+                        .options(joinedload(self.model.taxonomies))
                         .filter(models.MapPageTaxonomy.id_taxonomy == self.chapter_id)
                         .join(models.MapPageTaxonomy)
                         .order_by(models.CharacterPage.title)
@@ -96,7 +96,7 @@ class ItemLister:
         else:
             return (
                 self.db.query(self.model)
-                    .options(joinedload(getattr(self.model, 'taxonomies')))
+                    .options(joinedload(self.model.taxonomies))
                     .filter(models.MapPageTaxonomy.id_taxonomy == self.chapter_id)
                     .join(models.MapPageTaxonomy)
                     .order_by(self.model.order_no)
