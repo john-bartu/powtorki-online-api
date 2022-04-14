@@ -11,7 +11,8 @@ from app.database.models.page import (
     MindmapPage,
     DictionaryPage,
     ScriptPage,
-    VideoScriptPage
+    VideoScriptPage,
+    UserQuizAnswer
 )
 from app.database.models.page_type import PageType
 from app.database.models.taxonomy import (

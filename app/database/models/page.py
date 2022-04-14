@@ -1,6 +1,6 @@
 import json
 
-from sqlalchemy import Column, Integer, String, VARCHAR, ForeignKey
+from sqlalchemy import Column, Integer, String, VARCHAR, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
@@ -102,3 +102,12 @@ class MindmapPage(Page):
     __mapper_args__ = {
         'polymorphic_identity': 9
     }
+
+
+class UserQuizAnswer(Base):
+    __tablename__ = "map_user_quiz_answer"
+
+    id = Column(Integer, primary_key=True, index=True)
+    id_answer = Column(Integer, ForeignKey("answers.id"))
+    id_user = Column(Integer, ForeignKey("users.id"))
+    date_answer = Column(DateTime(timezone=True), server_default=func.now())

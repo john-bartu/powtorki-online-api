@@ -4,6 +4,7 @@ from typing import List
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import models
+from app.database.models import UserQuizAnswer
 from app.render.renderer import page_renderer
 
 
@@ -34,7 +35,20 @@ class QuizEndpoint:
             if answer.is_correct == 1:
                 correct.append(answer.id)
 
+        try:
+            for answer_id in answers_id:
+                log = UserQuizAnswer()
+                log.id_answer = answer_id
+                # log.id_user = TODO: log user session id
+                self.session.add(log)
+
+            self.session.flush()
+            self.session.commit()
+        except Exception as e:
+            print("error:")
+            print(str(e))
+
         if compare(answers_id, correct):
-            pass  # TODO: log user answer
+            pass  # TODO: return array of answers, null if not match
 
         return correct
