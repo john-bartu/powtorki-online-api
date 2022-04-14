@@ -17,21 +17,8 @@ tables_mapping = {
 }
 
 
-def filter_database(table_name, column_name, value):
-    # print(table_name, column_name, value)
-
-    if table_name == "img" and column_name == "id":
-        column_name = "slug"
-
-    filters = {column_name: value}
-
-    table_class = tables_mapping.get(table_name, None)
-
-    if table_class:
-        query = session.query(table_class).filter_by(**filters).all()
-        return query
-    else:
-        return []
+def find_image_slug(media_slug):
+    return session.query(Media).filter(Media.slug == media_slug).all()
 
 
 def func(item):
@@ -42,10 +29,16 @@ def func(item):
             regex = value
 
         value = regex[0]
-        nothing, table, column = key.split(' ')
-        res = filter_database(table, column, value)
+        _, knowledge_type, column = key.split(' ')
 
-        # print(res[0].format())
+        print(f"Find: {knowledge_type}, with {column}={value}")
+
+        if knowledge_type == 'img':
+            res = find_image_slug(value)
+        else:
+            # TODO: Support [date id=222] and [character name="Ludwik"]
+            res = []
+
         if len(res) > 0:
             return res[0].format()
         else:
