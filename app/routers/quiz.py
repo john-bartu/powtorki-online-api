@@ -16,7 +16,7 @@ class Answer(BaseModel):
 
 
 @router.post("/quiz/{page_id}")
-def get_knowledge_item(page_id: int, answer_data: Answer, db: Session = Depends(get_db)):
+def post_quiz_answer(page_id: int, answer_data: Answer, db: Session = Depends(get_db)):
     try:
         quiz = QuizEndpoint(db, page_id)
         correct = quiz.answer(answer_data.answers)
