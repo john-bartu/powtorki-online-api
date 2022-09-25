@@ -3,6 +3,7 @@ import json
 from sqlalchemy import Column, Integer, String, VARCHAR, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
 
+from app.constants import PageTypes
 from app.database.database import Base
 from app.render.templater import render_template
 
@@ -36,19 +37,19 @@ class Page(Base):
 
 class DocumentPage(Page):
     __mapper_args__ = {
-        'polymorphic_identity': 2
+        'polymorphic_identity': PageTypes.DocumentPage
     }
 
 
 class ScriptPage(Page):
     __mapper_args__ = {
-        'polymorphic_identity': 3
+        'polymorphic_identity': PageTypes.ScriptPage
     }
 
 
 class VideoScriptPage(ScriptPage):
     __mapper_args__ = {
-        'polymorphic_identity': 10
+        'polymorphic_identity': PageTypes.VideoScriptPage
     }
 
     media = relationship("PageMedia", uselist=True)
@@ -56,7 +57,7 @@ class VideoScriptPage(ScriptPage):
 
 class CharacterPage(Page):
     __mapper_args__ = {
-        'polymorphic_identity': 4
+        'polymorphic_identity': PageTypes.CharacterPage
     }
 
     def format(self):
@@ -65,7 +66,7 @@ class CharacterPage(Page):
 
 class CalendarPage(Page):
     __mapper_args__ = {
-        'polymorphic_identity': 5
+        'polymorphic_identity': PageTypes.CalendarPage
     }
 
     date = relationship("Date", back_populates="page", uselist=False)
@@ -76,7 +77,7 @@ class CalendarPage(Page):
 
 class DictionaryPage(Page):
     __mapper_args__ = {
-        'polymorphic_identity': 6
+        'polymorphic_identity': PageTypes.DictionaryPage
     }
 
     def format(self):
@@ -85,13 +86,13 @@ class DictionaryPage(Page):
 
 class QAPage(Page):
     __mapper_args__ = {
-        'polymorphic_identity': 7
+        'polymorphic_identity': PageTypes.QAPage
     }
 
 
 class QuizPage(Page):
     __mapper_args__ = {
-        'polymorphic_identity': 8
+        'polymorphic_identity': PageTypes.QuizPage
     }
 
     map_answers = relationship("MapPageAnswer", uselist=True)
@@ -100,7 +101,7 @@ class QuizPage(Page):
 
 class MindmapPage(Page):
     __mapper_args__ = {
-        'polymorphic_identity': 9
+        'polymorphic_identity': PageTypes.MindmapPage
     }
 
 
