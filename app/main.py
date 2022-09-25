@@ -4,7 +4,7 @@ from urllib.request import Request
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import knowledge, auth, quiz
+from app.routers import knowledge, auth, quiz, admin
 
 app = FastAPI()
 
@@ -40,3 +40,4 @@ def read_root():
 app.include_router(auth.router)
 app.include_router(quiz.router)
 app.include_router(knowledge.router)
+app.include_router(admin.router)
