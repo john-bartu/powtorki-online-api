@@ -8,7 +8,7 @@ from app.routers import knowledge, auth, quiz, admin
 
 app = FastAPI()
 
-origins = ["https://platforma.powtorkionline.pl"]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,13 +23,13 @@ def current_time_millis():
     return time.time() * 1000
 
 
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    start_time = current_time_millis()
-    response = await call_next(request)
-    process_time = current_time_millis() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    return response
+# @app.middleware("http")
+# async def add_process_time_header(request: Request, call_next):
+#     start_time = current_time_millis()
+#     response = await call_next(request)
+#     process_time = current_time_millis() - start_time
+#     response.headers["X-Process-Time"] = str(process_time)
+#     return response
 
 
 @app.get("/")

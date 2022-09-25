@@ -1,9 +1,11 @@
+import io
 import re
 
+import matplotlib.pyplot as plt
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.database.models import DictionaryPage, CharacterPage, DocumentPage, CalendarPage, Media, ChapterTaxonomy
+from app.database.models import DictionaryPage, CharacterPage, DocumentPage, CalendarPage, Media, ChapterTaxonomy, Page
 
 session: Session = next(get_db())
 
@@ -21,10 +23,23 @@ def find_image_slug(media_slug):
     return session.query(Media).filter(Media.slug == media_slug).all()
 
 
+def find_page_id(page_id):
+    return session.query(Page).filter(Page.id == page_id).all()
+
+
+def find_page_title(page_name):
+    return session.query(Page).filter(Page.title == page_name).all()
+
+
 def func(item):
     try:
         key, value = item.split('=')
         regex = re.findall(r'\"(.*?)\"', value)
+        regex2 = re.findall(r'([\da-zA-Z]+)', value)
+
+        if len(regex) >= 0:
+            regex = regex2
+
         if len(regex) <= 0:
             regex = value
 
@@ -35,12 +50,22 @@ def func(item):
 
         if knowledge_type == 'img':
             res = find_image_slug(value)
+        elif knowledge_type == 'date':
+            # TODO: Support [date id=222]
+            res = find_page_id(value)
+            res = []
+        elif knowledge_type == 'character':
+            # TODO: Support [character name="Ludwik"]
+            res = find_page_title(value)
+            res = []
         else:
-            # TODO: Support [date id=222] and [character name="Ludwik"]
             res = []
 
         if len(res) > 0:
-            return res[0].format()
+            try:
+                return res[0].format()
+            except:
+                return None
         else:
             return None
 
@@ -69,9 +94,35 @@ def image_converter(content):
     return result
 
 
+from matplotlib import numpy as np
+
+
+def math_converter(formula):
+    fontsize = 16
+    dpi = 300
+
+    fig = plt.figure(figsize=(0.01, 0.01))
+    fig.text(0, 0, r'${}$'.format(formula), fontsize=fontsize)
+
+
+    output = io.StringIO()
+    fig.savefig(output, dpi=dpi, transparent=True, format='svg', bbox_inches='tight', pad_inches=0.1)
+
+    data = "".join(output.getvalue().split("\n")[3::])
+    print(data)
+    return data
+
+
+def math_renderer(content):
+    print("math check")
+    resp = re.sub(r'\[m(.*?)\]', lambda m: math_converter(m.group(1)), content)
+    return resp
+
+
 def page_renderer(content):
     pattern = r'\[(.*?)\]'
-    resp = re.sub(pattern, lambda m: func(m.group(1)), content)
+    resp = math_renderer(content)
+    resp = re.sub(pattern, lambda m: func(m.group(1)), resp)
     return resp
 
 # if __name__ == "__main__":

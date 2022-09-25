@@ -16,3 +16,4 @@ pandas~=1.5.0
 openpyxl
 odfpy
 xlrd
+matplotlib==3.5.2

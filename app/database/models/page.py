@@ -61,7 +61,7 @@ class CharacterPage(Page):
     }
 
     def format(self):
-        return render_template('character-box.html', NAME=self.title, DESCRIPTION=self.description)
+        return render_template('character-box.html', NAME=self.title, DESCRIPTION=self.document)
 
 
 class CalendarPage(Page):
@@ -72,7 +72,7 @@ class CalendarPage(Page):
     date = relationship("Date", back_populates="page", uselist=False)
 
     def format(self):
-        return render_template('calendar-box.html', NAME=self.title, DESCRIPTION=self.description)
+        return render_template('calendar-box.html', NAME=self.title, DESCRIPTION=self.document)
 
 
 class DictionaryPage(Page):
@@ -81,7 +81,7 @@ class DictionaryPage(Page):
     }
 
     def format(self):
-        return render_template('dictionary-box.html', NAME=self.title, DESCRIPTION=self.description)
+        return render_template('dictionary-box.html', NAME=self.title, DESCRIPTION=self.document)
 
 
 class QAPage(Page):
