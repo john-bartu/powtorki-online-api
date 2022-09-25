@@ -71,15 +71,15 @@ class ItemLister:
                     .offset(self.pagination_limit * pagination_no)
                     .limit(self.pagination_limit)
             ).all()
-        elif self.model is models.CharacterPage:
-            if self.subject_id == 2:
+        elif self.model is models.CharacterPage or self.model is models.DictionaryPage:
+            if self.subject_id == 2 and self.model is models.CharacterPage:
                 # In Civics list all characters in this subject for all taxonomies
                 return (
                     self.db.query(self.model)
                         .options(joinedload(self.model.taxonomies))
                         .filter(models.CharacterTaxonomy.id_parent == self.subject_id)
                         .join(models.MapPageTaxonomy)
-                        .order_by(models.CharacterPage.title)
+                        .order_by(self.model.title)
                         .offset(self.pagination_limit * pagination_no)
                         .limit(self.pagination_limit)
                 ).all()
@@ -89,7 +89,7 @@ class ItemLister:
                         .options(joinedload(self.model.taxonomies))
                         .filter(models.MapPageTaxonomy.id_taxonomy == self.chapter_id)
                         .join(models.MapPageTaxonomy)
-                        .order_by(models.CharacterPage.title)
+                        .order_by(self.model.title)
                         .offset(self.pagination_limit * pagination_no)
                         .limit(self.pagination_limit)
                 ).all()
