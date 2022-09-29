@@ -46,8 +46,15 @@ def get_knowledge_list(subject: Union[int, str], db: Session = Depends(get_db)):
     return paginator.get_items()
 
 
+@router.get("/chapter/{chapter_id}")
+def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db)):
+    chapter = db.query(models.Taxonomy).filter(models.Taxonomy.id == chapter_id).first()
+    return chapter
+
+
 @router.get("/{subject}/{page_type}")
-def get_knowledge_list(subject: Union[int, str], page_type: str, chapter: int = None, page_no: int = 0, db: Session = Depends(get_db)):
+def get_knowledge_list(subject: Union[int, str], page_type: str, chapter: int = None, page_no: int = 0,
+                       db: Session = Depends(get_db)):
     if type(subject) is str:
         subject = subject_to_taxonomy_id.get(subject)
 
