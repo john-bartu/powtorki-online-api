@@ -7,6 +7,7 @@ from app.crud.chapter_lister import TaxonomyLister
 from app.crud.item_lister import ItemLister
 from app.database import models
 from app.database.database import get_db
+from app.helpers import get_whole_taxonomy
 
 router = APIRouter()
 
@@ -46,9 +47,19 @@ def get_knowledge_list(subject: Union[int, str], db: Session = Depends(get_db)):
     return paginator.get_items()
 
 
+from sqlalchemy import func
+
+
 @router.get("/chapter/{chapter_id}")
 def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db)):
     chapter = db.query(models.Taxonomy).filter(models.Taxonomy.id == chapter_id).first()
+    child_chapters = get_whole_taxonomy(db, chapter.id)
+    page_count_per_type = (db.query(models.Page.id_type, func.count(models.Page.id_type))
+                           .join(models.MapPageTaxonomy)
+                           .filter(models.MapPageTaxonomy.id_taxonomy.in_(child_chapters))
+                           .group_by(models.Page.id_type)).all()
+
+    chapter.pages = {page_type[0]: {'count': page_type[1]} for page_type in page_count_per_type}
     return chapter
 
 

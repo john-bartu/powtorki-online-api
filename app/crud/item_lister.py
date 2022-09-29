@@ -4,6 +4,7 @@ from typing import List, Type
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
 from app.database import models
+from app.helpers import get_whole_taxonomy
 from app.render.renderer import page_renderer
 
 
@@ -41,18 +42,6 @@ class ItemLister:
 
         return item
 
-    def get_whole_taxonomy(self, chapter_id: int):
-        taxonomy_selected = self.db.query(models.Taxonomy).with_entities(models.Taxonomy.id, models.Taxonomy.id_parent)
-        taxonomy_selected = taxonomy_selected.filter(models.Taxonomy.id == chapter_id)
-        taxonomy_selected = taxonomy_selected.cte('cte', recursive=True)
-
-        taxonomy_child = self.db.query(models.Taxonomy).with_entities(models.Taxonomy.id, models.Taxonomy.id_parent)
-        taxonomy_child = taxonomy_child.join(taxonomy_selected, models.Taxonomy.id_parent == taxonomy_selected.c.id)
-
-        recursive_q = taxonomy_selected.union(taxonomy_child)
-
-        return [tax[0] for tax in self.db.query(recursive_q).all()]
-
     def get_items(self, pagination_no: int = 0) -> List[models.Page]:
         if self.subject_id == 2 and (
                 self.model is models.CharacterPage or
@@ -60,9 +49,9 @@ class ItemLister:
                 self.model is models.CalendarPage
         ):
             # In Civics list all characters and  in this subject for all taxonomies
-            taxonomies = self.get_whole_taxonomy(self.subject_id)
+            taxonomies = get_whole_taxonomy(self.db, self.subject_id)
         else:
-            taxonomies = self.get_whole_taxonomy(self.chapter_id)
+            taxonomies = get_whole_taxonomy(self.db, self.chapter_id)
 
         query = (self.db.query(self.model)
                  .join(models.MapPageTaxonomy)
