@@ -81,7 +81,7 @@ def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db))
 
 
 @router.get("/{subject}/{page_type}")
-def get_knowledge_list(subject: Union[int, str], page_type: str, chapter: int = None, page_no: int = 0,
+def get_knowledge_list(subject: Union[int, str], page_type: str, chapter: int = None, page_no: int = 1,
                        db: Session = Depends(get_db)):
     if type(subject) is str:
         subject = subject_to_taxonomy_id.get(subject)
