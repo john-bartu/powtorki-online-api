@@ -1,13 +1,14 @@
 from typing import Union
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func, or_, and_
 from sqlalchemy.orm import Session
 
+from app.constants import PageTypes
 from app.crud.chapter_lister import TaxonomyLister
 from app.crud.item_lister import ItemLister
 from app.database import models
 from app.database.database import get_db
-from app.helpers import get_whole_taxonomy
 
 router = APIRouter()
 
@@ -47,18 +48,34 @@ def get_knowledge_list(subject: Union[int, str], db: Session = Depends(get_db)):
     return paginator.get_items()
 
 
-from sqlalchemy import func
-
-
 @router.get("/chapter/{chapter_id}")
 def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db)):
     chapter = db.query(models.Taxonomy).filter(models.Taxonomy.id == chapter_id).first()
-    child_chapters = get_whole_taxonomy(db, chapter.id)
-    page_count_per_type = (db.query(models.Page.id_type, func.count(models.Page.id_type))
-                           .join(models.MapPageTaxonomy)
-                           .filter(models.MapPageTaxonomy.id_taxonomy.in_(child_chapters))
-                           .group_by(models.Page.id_type)).all()
+    subject_id = chapter.get_subject(db)
+    whole_taxonomy = chapter.get_all_sub_taxonomies(db)
+    query = db.query(models.Page.id_type, func.count(models.Page.id_type)).join(models.MapPageTaxonomy)
 
+    if subject_id == 2:
+        civics_common_pages = [PageTypes.CharacterPage, PageTypes.DictionaryPage, PageTypes.CalendarPage]
+        subject_taxonomies = (db.query(models.Taxonomy)
+                              .filter(models.Taxonomy.id == subject_id).first()
+                              ).get_all_sub_taxonomies(db)
+        query = (
+            query.filter(
+                or_(
+                    and_(
+                        models.MapPageTaxonomy.id_taxonomy.in_(subject_taxonomies),
+                        models.Page.id_type.in_(civics_common_pages)
+                    ),
+                    and_(
+                        models.MapPageTaxonomy.id_taxonomy.in_(whole_taxonomy),
+                        models.Page.id_type.notin_(civics_common_pages)
+                    )
+                )))
+    else:
+        query = query.filter(models.MapPageTaxonomy.id_taxonomy.in_(whole_taxonomy))
+
+    page_count_per_type = query.group_by(models.Page.id_type).all()
     chapter.pages = {page_type[0]: {'count': page_type[1]} for page_type in page_count_per_type}
     return chapter
 

@@ -42,7 +42,11 @@ class ItemLister:
 
         return item
 
-    def get_items(self, pagination_no: int = 0) -> List[models.Page]:
+    def get_items(self, pagination_no: int = 1) -> List[models.Page]:
+        if not pagination_no > 0:
+            raise ValueError("Page cannot be less than 1")
+        pagination_no = pagination_no - 1
+
         if self.subject_id == 2 and (
                 self.model is models.CharacterPage or
                 self.model is models.DictionaryPage or

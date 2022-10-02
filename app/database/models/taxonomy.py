@@ -1,7 +1,7 @@
 import json
 
 from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, PrimaryKeyConstraint, String
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Session
 
 from app.database.database import Base
 
@@ -43,6 +43,30 @@ class Taxonomy(Base):
     def __repr__(self):
         filter_names = ['id', 'id_parent', 'id_taxonomy_type', 'name', 'description']
         return json.dumps({index: str(value) if index in filter_names else "" for index, value in vars(self).items()})
+
+    def get_all_sub_taxonomies(self, db: Session):
+        taxonomy_selected = db.query(Taxonomy).with_entities(Taxonomy.id, Taxonomy.id_parent)
+        taxonomy_selected = taxonomy_selected.filter(Taxonomy.id == self.id)
+        taxonomy_selected = taxonomy_selected.cte('cte', recursive=True)
+
+        taxonomy_child = db.query(Taxonomy).with_entities(Taxonomy.id, Taxonomy.id_parent)
+        taxonomy_child = taxonomy_child.join(taxonomy_selected, Taxonomy.id_parent == taxonomy_selected.c.id)
+
+        recursive_q = taxonomy_selected.union(taxonomy_child)
+
+        return [tax[0] for tax in db.query(recursive_q).all()]
+
+    def get_subject(self, db: Session):
+        taxonomy_selected = db.query(Taxonomy).with_entities(Taxonomy.id, Taxonomy.id_parent, Taxonomy.id_taxonomy_type)
+        taxonomy_selected = taxonomy_selected.filter(Taxonomy.id == self.id)
+        taxonomy_selected = taxonomy_selected.cte('cte', recursive=True)
+
+        taxonomy_child = db.query(Taxonomy).with_entities(Taxonomy.id, Taxonomy.id_parent, Taxonomy.id_taxonomy_type)
+        taxonomy_child = taxonomy_child.join(taxonomy_selected, Taxonomy.id == taxonomy_selected.c.id_parent)
+
+        recursive_q = taxonomy_selected.union(taxonomy_child)
+
+        return db.query(recursive_q).all()[-1]
 
 
 class SubjectTaxonomy(Taxonomy):
