@@ -1,5 +1,4 @@
 import time
-from urllib.request import Request
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +7,7 @@ from app.routers import knowledge, auth, quiz, admin
 
 app = FastAPI()
 
-origins = ["*"]
+origins = ["https://platforma.powtorkionline.pl"]
 
 app.add_middleware(
     CORSMiddleware,
