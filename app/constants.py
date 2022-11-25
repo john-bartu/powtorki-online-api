@@ -1,3 +1,8 @@
+class KnowledgeTypes:
+    History = 1
+    Civics = 2
+
+
 class PageTypes:
     Page = 1
     DocumentPage = 2

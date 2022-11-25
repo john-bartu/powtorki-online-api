@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, or_, and_
 from sqlalchemy.orm import Session
 
-from app.constants import PageTypes
+from app.constants import PageTypes, KnowledgeTypes
 from app.crud.chapter_lister import TaxonomyLister
 from app.crud.item_lister import ItemLister
 from app.database import models
@@ -55,7 +55,7 @@ def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db))
     whole_taxonomy = chapter.get_all_sub_taxonomies(db)
     query = db.query(models.Page.id_type, func.count(models.Page.id_type)).join(models.MapPageTaxonomy)
 
-    if subject_id == 2:
+    if subject_id == KnowledgeTypes.Civics:
         civics_common_pages = [PageTypes.CharacterPage, PageTypes.DictionaryPage, PageTypes.CalendarPage]
         subject_taxonomies = (db.query(models.Taxonomy)
                               .filter(models.Taxonomy.id == subject_id).first()

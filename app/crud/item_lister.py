@@ -3,6 +3,7 @@ from typing import List, Type
 
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
+from app.constants import KnowledgeTypes
 from app.database import models
 from app.helpers import get_whole_taxonomy
 from app.render.renderer import page_renderer
@@ -47,7 +48,7 @@ class ItemLister:
             raise ValueError("Page cannot be less than 1")
         pagination_no = pagination_no - 1
 
-        if self.subject_id == 2 and (
+        if self.subject_id == KnowledgeTypes.Civics and (
                 self.model is models.CharacterPage or
                 self.model is models.DictionaryPage or
                 self.model is models.CalendarPage
