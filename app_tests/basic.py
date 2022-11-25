@@ -34,7 +34,10 @@ constants = {
 def database():
     db = Database()
     db.fetch()
-    yield db
+    try:
+        yield db
+    finally:
+        db.connection.close()
 
 
 @pytest.mark.parametrize("name,expected_id", [(key, value) for key, value in constants.items()])
