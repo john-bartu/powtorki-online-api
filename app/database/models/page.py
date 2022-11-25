@@ -23,7 +23,7 @@ class Page(Base):
     time_creation = Column(String)
     time_edited = Column(String)
 
-    taxonomies = relationship("MapPageTaxonomy", uselist=True)
+    taxonomies = relationship("MapPageTaxonomy", uselist=True, back_populates="page")
 
     __mapper_args__ = {
         'polymorphic_on': id_type,
@@ -95,7 +95,7 @@ class QuizPage(Page):
         'polymorphic_identity': PageTypes.QuizPage
     }
 
-    map_answers = relationship("MapPageAnswer", uselist=True)
+    map_answers = relationship("MapPageAnswer", uselist=True, back_populates='page')
     answers = relationship("PageAnswer", uselist=True)
 
 

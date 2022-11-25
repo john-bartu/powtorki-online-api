@@ -12,7 +12,7 @@ class MapPageAnswer(Base):
     id_answer = Column(Integer, ForeignKey("answers.id"))
     is_correct = Column(Integer)
 
-    page = relationship("Page", uselist=False)
+    page = relationship("QuizPage", uselist=False, back_populates="map_answers")
     answer = relationship("Answer", uselist=False)
 
 

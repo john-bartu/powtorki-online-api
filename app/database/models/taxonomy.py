@@ -12,8 +12,8 @@ class MapPageTaxonomy(Base):
     id_page = Column(Integer, ForeignKey("pages.id"))
     id_taxonomy = Column(Integer, ForeignKey("taxonomies.id"))
 
-    taxonomy = relationship('Taxonomy', uselist=False)
-    page = relationship('Page', uselist=False)
+    taxonomy = relationship('Taxonomy', uselist=False, back_populates="map_pages")
+    page = relationship('Page', uselist=False, back_populates="taxonomies")
 
     __table_args__ = (
         PrimaryKeyConstraint(id_page, id_taxonomy),
@@ -30,7 +30,7 @@ class Taxonomy(Base):
     description = Column(VARCHAR(180))
 
     children = relationship('Taxonomy', uselist=True)
-    map_pages = relationship('MapPageTaxonomy', uselist=True)
+    map_pages = relationship('MapPageTaxonomy', uselist=True, back_populates="taxonomy")
 
     time_creation = Column(String)
     time_edited = Column(String)
