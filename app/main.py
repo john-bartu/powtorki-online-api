@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 
 from fastapi import FastAPI
@@ -14,11 +15,9 @@ logging.basicConfig(
 
 app = FastAPI()
 
-origins = ["https://platforma.powtorkionline.pl"]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=os.getenv('ORIGINS'),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
