@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 from app.constants import KnowledgeTypes
 from app.database import models
 from app.helpers import get_whole_taxonomy
-from app.render.renderer import page_renderer
+from app.render.renderer import PageRenderer
 
 
 class ItemLister:
@@ -22,7 +22,7 @@ class ItemLister:
         super().__init__()
 
     def get_item(self, page_id: int):
-
+        renderer = PageRenderer()
         if self.model is models.QuizPage:
             item = (self.db.query(models.QuizPage)
                     .options(joinedload(models.QuizPage.answers)
@@ -39,7 +39,7 @@ class ItemLister:
             item = self.db.query(self.model).filter(self.model.id == page_id).first()
 
         if item.document:
-            item.document = page_renderer(item.document).strip()
+            item.document = renderer.render(item.document)
 
         return item
 
