@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.database import models
 from app.database.models import UserQuizAnswer
-from app.render.renderer import page_renderer
+from app.render.renderer import PageRenderer
 
 
 def compare(s, t):
@@ -19,13 +19,15 @@ class QuizEndpoint:
         self.item = self.get_item(quiz_id)
 
     def get_item(self, page_id: int) -> models.QuizPage:
+        renderer = PageRenderer()
+
         item = (self.session.query(models.QuizPage)
                 .options(joinedload(models.QuizPage.answers)
                          .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer))
                 .filter(models.QuizPage.id == page_id).first())
 
         if item.document:
-            item.document = page_renderer(item.document).strip()
+            item.document = renderer.render(item.document)
         return item
 
     def answer(self, answers_id: List[int]):
