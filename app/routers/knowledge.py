@@ -1,4 +1,5 @@
-from typing import Union
+from pprint import pprint
+from typing import Union, List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, or_, and_
@@ -7,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.constants import PageTypes, KnowledgeTypes
 from app.crud.chapter_lister import TaxonomyLister
 from app.crud.item_lister import ItemLister
+from app.crud.models.taxonomy_dto import TaxonomyOut
 from app.database import models
 from app.database.database import get_db
 
@@ -33,6 +35,14 @@ subject_to_taxonomy_id = {
     'history': 1,
     'civics': 2
 }
+
+
+@router.get("/taxonomy/search", response_model=list[TaxonomyOut])
+def get_knowledge_taxonomy(query: str = "", db: Session = Depends(get_db)):
+    taxonomy = TaxonomyLister(db, models.Taxonomy, 1)
+
+    search = taxonomy.search(query)
+    return search
 
 
 @router.get("/{subject}")

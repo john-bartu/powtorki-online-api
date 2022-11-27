@@ -1,7 +1,7 @@
 import json
 
 from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, PrimaryKeyConstraint, String
-from sqlalchemy.orm import relationship, Session
+from sqlalchemy.orm import relationship, Session, backref
 
 from app.database.database import Base
 
@@ -29,7 +29,7 @@ class Taxonomy(Base):
     name = Column(VARCHAR(60))
     description = Column(VARCHAR(180))
 
-    children = relationship('Taxonomy', uselist=True)
+    children = relationship('Taxonomy', uselist=True, backref=backref('parent', uselist=False, remote_side=[id]))
     map_pages = relationship('MapPageTaxonomy', uselist=True, back_populates="taxonomy")
 
     time_creation = Column(String)
