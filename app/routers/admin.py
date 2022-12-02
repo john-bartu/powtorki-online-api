@@ -1,10 +1,13 @@
 from fastapi import APIRouter, UploadFile, Form, Depends
+from fastapi_permissions import Allow, All
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
+from app.auth.permissions import Permission
 from app.constants import PageTypes
 from app.database import models
 from app.database.database import get_db
+from app.routers import Admin
 from app.tools.importing import process_documents, process_pdf, process_qa, process_dates, process_characters, \
     process_dictionary, process_quiz
 
@@ -22,7 +25,7 @@ page_type_to_model = {
 }
 
 
-@router.post("/import_from_file/")
+@router.post("/import_from_file/", dependencies=[Permission("view", [(Allow, Admin, All)])])
 def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type: int = Form(),
                      db: Session = Depends(get_db)):
     new_pages = []
@@ -72,7 +75,7 @@ def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type:
     return {"filenames": (file.filename for file in files), "taxonomy": taxonomy, "page_type": page_type}
 
 
-@router.get("/admin/")
+@router.get("/admin/", dependencies=[Permission("view", [(Allow, Admin, All)])])
 async def main():
     content = """
 <!DOCTYPE html>
