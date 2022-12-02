@@ -18,3 +18,11 @@ odfpy
 xlrd
 matplotlib==3.6.2
 cryptography
+PyJWT~=2.6.0
+passlib~=1.7.4
+html~=1.13
+morfeusz2~=1.99.6
+tqdm~=4.64.1
+fuzzysearch~=0.7.3
+jose~=1.0.0
+fastapi_permissions

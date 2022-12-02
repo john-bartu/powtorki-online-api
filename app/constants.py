@@ -14,3 +14,12 @@ class PageTypes:
     QuizPage = 8
     MindmapPage = 9
     VideoScriptPage = 10
+
+
+class Roles:
+    Admin = 'admin'
+    User = 'user'
+    map_id_to_name = {
+        1: "admin",
+        2: 'user',
+    }

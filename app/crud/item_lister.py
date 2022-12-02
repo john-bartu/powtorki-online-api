@@ -54,9 +54,9 @@ class ItemLister:
                 self.model is models.CalendarPage
         ):
             # In Civics list all characters and  in this subject for all taxonomies
-            taxonomies = get_whole_taxonomy(self.db, self.subject_id)
+            taxonomies = get_whole_taxonomy(self.db, [self.subject_id])
         else:
-            taxonomies = get_whole_taxonomy(self.db, self.chapter_id)
+            taxonomies = get_whole_taxonomy(self.db, [self.chapter_id])
 
         query = (self.db.query(self.model)
                  .join(models.MapPageTaxonomy)

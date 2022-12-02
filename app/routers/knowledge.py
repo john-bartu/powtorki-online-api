@@ -1,10 +1,11 @@
-from pprint import pprint
-from typing import Union, List
+from typing import Union
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi_permissions import Allow, Authenticated, All
 from sqlalchemy import func, or_, and_
 from sqlalchemy.orm import Session
 
+from app.auth.permissions import Permission
 from app.constants import PageTypes, KnowledgeTypes
 from app.crud.chapter_lister import TaxonomyLister
 from app.crud.item_lister import ItemLister
@@ -90,7 +91,7 @@ def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db))
     return chapter
 
 
-@router.get("/{subject}/{page_type}")
+@router.get("/{subject}/{page_type}", dependencies=[Permission("view", [(Allow, Authenticated, All)])])
 def get_knowledge_list(subject: Union[int, str], page_type: str, chapter: int = None, page_no: int = 1,
                        db: Session = Depends(get_db)):
     if type(subject) is str:
@@ -108,7 +109,7 @@ def get_knowledge_list(subject: Union[int, str], page_type: str, chapter: int = 
     return paginator.get_items(page_no)
 
 
-@router.get("/{subject}/{page_type}/{page_id}")
+@router.get("/{subject}/{page_type}/{page_id}", dependencies=[Permission("view", [(Allow, Authenticated, All)])])
 def get_knowledge_item(subject: Union[int, str], page_type: str, page_id: int, db: Session = Depends(get_db)):
     if type(subject) is str:
         subject = subject_to_taxonomy_id.get(subject)
