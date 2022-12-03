@@ -27,9 +27,11 @@ class ItemLister:
                 .options(
             selectin_polymorphic(models.Page, [models.QuizPage, models.VideoScriptPage, models.CalendarPage]),
             joinedload(models.QuizPage.answers)
-            .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer),
+            # .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer)
+            ,
             joinedload(models.VideoScriptPage.media),
-            joinedload(models.CalendarPage.date))
+            joinedload(models.CalendarPage.date),
+            joinedload(models.Page.taxonomies).joinedload(models.MapPageTaxonomy.taxonomy))
                 .filter(models.Page.id == page_id).first())
 
         if item.document:

@@ -1,6 +1,6 @@
 import json
 
-from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, PrimaryKeyConstraint, String
+from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, String, PrimaryKeyConstraint
 from sqlalchemy.orm import relationship, Session, backref
 
 from app.constants import TaxonomyTypes

@@ -18,15 +18,22 @@ class TaxonomyLister:
         super().__init__()
 
     def get_item(self, taxonomy_id: int):
-        return self.db.query(self.model).filter(self.model.id == taxonomy_id).first()
+        item = (self.db.query(self.model).
+                options(joinedload(self.model.children))
+                .filter(self.model.id == taxonomy_id)
+                .first())
+
+        tax_tree = self.get_taxonomy_tree(item)[1:]
+        item.path = tax_tree if len(tax_tree) > 0 else []
+        return item
 
     def get_items(self, pagination_no: int = 0) -> List[models.Page]:
-        return self.db.query(self.model) \
-            .options(joinedload(self.model.children)) \
-            .filter(self.model.id_parent == self.subject_id) \
-            .offset(self.pagination_limit * pagination_no) \
-            .limit(self.pagination_limit) \
-            .all()
+        return (self.db.query(self.model)
+                .options(joinedload(self.model.children))
+                .filter(self.model.id_parent == self.subject_id)
+                .offset(self.pagination_limit * pagination_no)
+                .limit(self.pagination_limit)
+                .all())
 
     def get_taxonomy_tree(self, taxonomy: models.Taxonomy, tax_names=None) -> List[str]:
         if tax_names is None:
@@ -37,10 +44,10 @@ class TaxonomyLister:
             return self.get_taxonomy_tree(taxonomy.parent, tax_names + [taxonomy.name])
 
     def search(self, query):
-        taxonomies = self.db.query(self.model) \
-            .filter(or_(self.model.name.match(query), self.model.name.like(f'%{query}%'))) \
-            .limit(30) \
-            .all()
+        taxonomies = (self.db.query(self.model)
+                      .filter(or_(self.model.name.match(query), self.model.name.like(f'%{query}%')))
+                      .limit(30)
+                      .all())
 
         for tax in taxonomies:
             tax_tree = self.get_taxonomy_tree(tax)[1:]

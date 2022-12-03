@@ -66,6 +66,17 @@ def get_knowledge_taxonomy(query: str = "", db: Session = Depends(get_db)):
     return search
 
 
+@router.get(
+    "/taxonomy/get/{taxonomy_id}",
+    response_model=TaxonomyOut,
+)
+def get_knowledge_taxonomy(taxonomy_id: int, db: Session = Depends(get_db)):
+    taxonomy = TaxonomyLister(db, models.Taxonomy, 1)
+
+    search = taxonomy.get_item(taxonomy_id)
+    return search
+
+
 @router.get("/taxonomy/{subject}")
 def get_knowledge_list(subject: Union[int, str], db: Session = Depends(get_db)):
     if type(subject) is str:

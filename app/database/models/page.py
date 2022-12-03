@@ -1,6 +1,7 @@
 import json
 
 from sqlalchemy import Column, Integer, String, VARCHAR, ForeignKey, DateTime, func
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship
 
 from app.constants import PageTypes
