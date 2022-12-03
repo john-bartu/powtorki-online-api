@@ -1,42 +1,36 @@
 from random import shuffle
-from typing import List, Type
+from typing import List
 
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
-from app.constants import KnowledgeTypes
+from app.constants import PageTypes
 from app.database import models
-from app.helpers import get_whole_taxonomy
+from app.helpers import get_whole_branch
 from app.render.renderer import PageRenderer
 
 
 class ItemLister:
 
-    def __init__(self, db: Session, model: Type[models.Page], subject_id: int, chapter: int = None,
-                 limit: int = 25) -> None:
+    def __init__(self, db: Session, limit: int = 25) -> None:
         self.db = db
-        self.model = model
-        self.subject_id = subject_id
         self.pagination_limit = limit
-        self.chapter_id = chapter
+
+        self.filter_taxonomies: List[int] = []
+        self.filter_page_types: List[int] = []
 
         super().__init__()
 
     def get_item(self, page_id: int):
         renderer = PageRenderer()
-        if self.model is models.QuizPage:
-            item = (self.db.query(models.QuizPage)
-                    .options(joinedload(models.QuizPage.answers)
-                             .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer))
-                    .filter(self.model.id == page_id).first())
 
-            shuffle(item.answers)
-        elif self.model is models.ScriptPage:
-            item = (self.db.query(self.model)
-                    .options(selectin_polymorphic(models.ScriptPage, [models.VideoScriptPage]),
-                             joinedload(models.VideoScriptPage.media))
-                    .filter(self.model.id == page_id)).first()
-        else:
-            item = self.db.query(self.model).filter(self.model.id == page_id).first()
+        item = (self.db.query(models.Page)
+                .options(
+            selectin_polymorphic(models.Page, [models.QuizPage, models.VideoScriptPage, models.CalendarPage]),
+            joinedload(models.QuizPage.answers)
+            .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer),
+            joinedload(models.VideoScriptPage.media),
+            joinedload(models.CalendarPage.date))
+                .filter(models.Page.id == page_id).first())
 
         if item.document:
             item.document = renderer.render(item.document)
@@ -48,42 +42,43 @@ class ItemLister:
             raise ValueError("Page cannot be less than 1")
         pagination_no = pagination_no - 1
 
-        if self.subject_id == KnowledgeTypes.Civics and (
-                self.model is models.CharacterPage or
-                self.model is models.DictionaryPage or
-                self.model is models.CalendarPage
-        ):
-            # In Civics list all characters and  in this subject for all taxonomies
-            taxonomies = get_whole_taxonomy(self.db, [self.subject_id])
-        else:
-            taxonomies = get_whole_taxonomy(self.db, [self.chapter_id])
+        query = (self.db.query(models.Page)  # noqa
+        .join(models.Page.taxonomies)
+        .join(models.CalendarPage.date, isouter=True)
+        .join(models.QuizPage.answers, isouter=True)
+        .options(
+            selectin_polymorphic(models.Page, [models.QuizPage, models.VideoScriptPage, models.CalendarPage]),
+            joinedload(models.QuizPage.answers)
+            .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer),
+            joinedload(models.VideoScriptPage.media),
+            joinedload(models.CalendarPage.date),
+            joinedload(models.Page.taxonomies)))
 
-        query = (self.db.query(self.model)
-                 .join(models.MapPageTaxonomy)
-                 .options(joinedload(self.model.taxonomies))
-                 .filter(models.MapPageTaxonomy.id_taxonomy.in_(taxonomies)))
+        if len(self.filter_taxonomies) > 0:
+            taxonomies = [get_whole_branch(self.db, [taxonomy]) for taxonomy in self.filter_taxonomies][0]
+            print(taxonomies)
+            query = query.filter(models.MapPageTaxonomy.id_taxonomy.in_(taxonomies))
 
-        if self.model is models.QuizPage:
-            quizzes = (query
-                       .options(joinedload(models.QuizPage.answers)
-                                .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer))
-                       .order_by(models.QuizPage.title)
-                       .offset(self.pagination_limit * pagination_no)
-                       .limit(self.pagination_limit)
-                       ).all()
+        if len(self.filter_page_types) > 0:
+            query = query.filter(models.Page.id_type.in_(self.filter_page_types))
 
-            for quiz in quizzes:
-                shuffle(quiz.answers)
-
-            return quizzes
-        else:
-            if self.model is models.CalendarPage:
-                query = (query.join(models.Date)
-                         .options(joinedload(models.CalendarPage.date))
-                         .order_by(models.Date.date_number))
-            elif self.model is models.CharacterPage or self.model is models.DictionaryPage:
-                query = query.order_by(self.model.title)
+        if len(self.filter_page_types) == 1:
+            page_type = self.filter_page_types[0]
+            if page_type == PageTypes.CalendarPage:
+                query = query.order_by(models.Date.date_number)
+            elif page_type in [PageTypes.CharacterPage, PageTypes.DictionaryPage]:
+                query = query.order_by(models.Page.title)
+            elif page_type in [PageTypes.VideoScriptPage, PageTypes.DocumentPage, PageTypes.ScriptPage]:
+                query = query.order_by(models.Page.order_no)
             else:
-                query = query.order_by(self.model.order_no)
-            return (query.offset(self.pagination_limit * pagination_no)
-                    .limit(self.pagination_limit)).all()
+                query = query.order_by(models.Page.title)
+        else:
+            query = query.order_by(models.Page.title)
+
+        results = (query.offset(self.pagination_limit * pagination_no).limit(self.pagination_limit).all())
+
+        for page in results:
+            if page.id_type == PageTypes.QuizPage:
+                shuffle(page.answers)
+
+        return results

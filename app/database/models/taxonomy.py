@@ -3,7 +3,9 @@ import json
 from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, PrimaryKeyConstraint, String
 from sqlalchemy.orm import relationship, Session, backref
 
+from app.constants import TaxonomyTypes
 from app.database.database import Base
+from app.helpers import get_descendants, get_ancestors, get_whole_branch, get_subjects
 
 
 class MapPageTaxonomy(Base):
@@ -20,6 +22,7 @@ class MapPageTaxonomy(Base):
     )
 
 
+# noinspection DuplicatedCode
 class Taxonomy(Base):
     __tablename__ = "taxonomies"
 
@@ -44,70 +47,46 @@ class Taxonomy(Base):
         filter_names = ['id', 'id_parent', 'id_taxonomy_type', 'name', 'description']
         return json.dumps({index: str(value) if index in filter_names else "" for index, value in vars(self).items()})
 
-    def get_all_sub_taxonomies(self, db: Session):
-        taxonomy_selected = db.query(Taxonomy).with_entities(Taxonomy.id, Taxonomy.id_parent)
-        taxonomy_selected = taxonomy_selected.filter(Taxonomy.id == self.id)
-        taxonomy_selected = taxonomy_selected.cte('cte', recursive=True)
+    def get_descendants(self, db: Session):
+        return [tax[0] for tax in get_descendants(db, [self.id])]
 
-        taxonomy_child = db.query(Taxonomy).with_entities(Taxonomy.id, Taxonomy.id_parent)
-        taxonomy_child = taxonomy_child.join(taxonomy_selected, Taxonomy.id_parent == taxonomy_selected.c.id)
+    def get_ancestors(self, db: Session):
+        return [tax[0] for tax in get_ancestors(db, [self.id])]
 
-        recursive_q = taxonomy_selected.union(taxonomy_child)
-
-        return [tax[0] for tax in db.query(recursive_q).all()]
+    def get_whole_branch(self, db: Session):
+        return get_whole_branch(db, [self.id])
 
     def get_subject(self, db: Session):
-        taxonomy_selected = db.query(Taxonomy).with_entities(Taxonomy.id, Taxonomy.id_parent, Taxonomy.id_taxonomy_type)
-        taxonomy_selected = taxonomy_selected.filter(Taxonomy.id == self.id)
-        taxonomy_selected = taxonomy_selected.cte('cte', recursive=True)
-
-        taxonomy_child = db.query(Taxonomy).with_entities(Taxonomy.id, Taxonomy.id_parent, Taxonomy.id_taxonomy_type)
-        taxonomy_child = taxonomy_child.join(taxonomy_selected, Taxonomy.id == taxonomy_selected.c.id_parent)
-
-        recursive_q = taxonomy_selected.union(taxonomy_child)
-
-        return db.query(recursive_q).all()[-1]
+        subjects = get_subjects(db, [self.id])
+        if len(subjects) > 1:
+            raise Exception("This subject belongs to multiple subjects")
+        elif len(subjects) == 0:
+            raise Exception("This subject does not belong to any subject")
+        else:
+            return subjects[0]
 
 
 class SubjectTaxonomy(Taxonomy):
     __mapper_args__ = {
-        'polymorphic_identity': 2
+        'polymorphic_identity': TaxonomyTypes.SubjectTaxonomy
     }
 
 
 class ChapterTaxonomy(Taxonomy):
     __mapper_args__ = {
-        'polymorphic_identity': 3
+        'polymorphic_identity': TaxonomyTypes.ChapterTaxonomy
     }
 
 
-class CalendarTaxonomy(Taxonomy):
+class SetTaxonomy(Taxonomy):
     __mapper_args__ = {
-        'polymorphic_identity': 4
+        'polymorphic_identity': TaxonomyTypes.SetTaxonomy
     }
 
 
-class CharacterTaxonomy(Taxonomy):
+class KindTaxonomy(Taxonomy):
     __mapper_args__ = {
-        'polymorphic_identity': 5
-    }
-
-
-class DictionaryTaxonomy(Taxonomy):
-    __mapper_args__ = {
-        'polymorphic_identity': 6
-    }
-
-
-class QuizTaxonomy(Taxonomy):
-    __mapper_args__ = {
-        'polymorphic_identity': 7
-    }
-
-
-class QATaxonomy(Taxonomy):
-    __mapper_args__ = {
-        'polymorphic_identity': 8
+        'polymorphic_identity': TaxonomyTypes.KindTaxonomy
     }
 
 

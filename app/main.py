@@ -13,6 +13,9 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+logging.getLogger().addHandler(logging.StreamHandler())
+
 app = FastAPI()
 
 app.add_middleware(

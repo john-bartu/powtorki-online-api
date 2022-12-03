@@ -20,11 +20,7 @@ from app.database.models.taxonomy import (
     SubjectTaxonomy,
     ChapterTaxonomy,
     MapPageTaxonomy,
-    QATaxonomy,
-    QuizTaxonomy,
-    CharacterTaxonomy,
-    DictionaryTaxonomy,
-    CalendarTaxonomy,
+    SetTaxonomy,
     TaxonomyType
 )
 from app.database.models.user import User
