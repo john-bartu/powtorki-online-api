@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import Column, Integer, VARCHAR, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -24,6 +26,10 @@ class PageAnswer(Base):
     id_answer = Column(Integer, ForeignKey("answers.id"))
     is_correct = Column(Integer)
     answer = Column(VARCHAR(255))
+
+    def __repr__(self):
+        filter_names = ['id', 'id_question', 'id_answer', 'is_correct', 'answer']
+        return json.dumps({index: str(value) if index in filter_names else "" for index, value in vars(self).items()})
 
 
 class Answer(Base):

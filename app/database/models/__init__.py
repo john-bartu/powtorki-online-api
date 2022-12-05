@@ -8,10 +8,7 @@ from app.database.models.page import (
     DocumentPage,
     QuizPage,
     QAPage,
-    MindmapPage,
     DictionaryPage,
-    ScriptPage,
-    VideoScriptPage,
     UserQuizAnswer
 )
 from app.database.models.page_type import PageType

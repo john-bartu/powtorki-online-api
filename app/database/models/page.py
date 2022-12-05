@@ -1,7 +1,6 @@
 import json
 
 from sqlalchemy import Column, Integer, String, VARCHAR, ForeignKey, DateTime, func
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship
 
 from app.constants import PageTypes
@@ -21,8 +20,8 @@ class Page(Base):
     description = Column(VARCHAR(255))
     note = Column(VARCHAR(255))
 
-    time_creation = Column(String)
-    time_edited = Column(String)
+    time_creation = Column(DateTime(timezone=True), server_default=func.now())
+    time_edited = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     taxonomies = relationship("MapPageTaxonomy", uselist=True, back_populates="page")
 
@@ -39,18 +38,6 @@ class Page(Base):
 class DocumentPage(Page):
     __mapper_args__ = {
         'polymorphic_identity': PageTypes.DocumentPage
-    }
-
-
-class ScriptPage(Page):
-    __mapper_args__ = {
-        'polymorphic_identity': PageTypes.ScriptPage
-    }
-
-
-class VideoScriptPage(ScriptPage):
-    __mapper_args__ = {
-        'polymorphic_identity': PageTypes.VideoScriptPage
     }
 
     media = relationship("PageMedia", uselist=True)
@@ -98,12 +85,6 @@ class QuizPage(Page):
 
     map_answers = relationship("MapPageAnswer", uselist=True, back_populates='page')
     answers = relationship("PageAnswer", uselist=True)
-
-
-class MindmapPage(Page):
-    __mapper_args__ = {
-        'polymorphic_identity': PageTypes.MindmapPage
-    }
 
 
 class UserQuizAnswer(Base):

@@ -14,14 +14,12 @@ from app.tools.importing import process_documents, process_pdf, process_qa, proc
 router = APIRouter()
 
 page_type_to_model = {
-    PageTypes.ScriptPage: models.ScriptPage,
     PageTypes.DocumentPage: models.DocumentPage,
     PageTypes.CharacterPage: models.CharacterPage,
     PageTypes.DictionaryPage: models.DictionaryPage,
     PageTypes.CalendarPage: models.CalendarPage,
     PageTypes.QuizPage: models.QuizPage,
     PageTypes.QAPage: models.QAPage,
-    PageTypes.MindmapPage: models.MindmapPage
 }
 
 

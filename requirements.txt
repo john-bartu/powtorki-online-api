@@ -26,3 +26,4 @@ tqdm~=4.64.1
 fuzzysearch~=0.7.3
 jose~=1.0.0
 fastapi_permissions
+deepdiff~=6.2.1

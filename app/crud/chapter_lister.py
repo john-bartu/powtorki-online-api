@@ -27,7 +27,7 @@ class TaxonomyLister:
         item.path = tax_tree if len(tax_tree) > 0 else []
         return item
 
-    def get_items(self, pagination_no: int = 0) -> List[models.Page]:
+    def get_items(self, pagination_no: int = 0) -> List[models.Taxonomy]:
         return (self.db.query(self.model)
                 .options(joinedload(self.model.children))
                 .filter(self.model.id_parent == self.subject_id)
