@@ -13,3 +13,13 @@ class TaxonomyOut(BaseModel):
     name: str
     description: str | None
     path: List[str] = []
+
+
+class TaxonomyForm(BaseModel):
+    class Config:
+        orm_mode = True
+
+    id_parent: int | None
+    id_taxonomy_type: int
+    name: str
+    description: str | None

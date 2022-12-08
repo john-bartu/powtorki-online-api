@@ -8,7 +8,7 @@ from app.constants import PageTypes
 from app.crud.chapter_lister import TaxonomyLister
 from app.crud.item_lister import ItemLister
 from app.crud.models.page_dto import PageForm
-from app.crud.models.taxonomy_dto import TaxonomyOut
+from app.crud.models.taxonomy_dto import TaxonomyOut, TaxonomyForm
 from app.database import models
 from app.database.database import get_db
 
@@ -59,10 +59,39 @@ subject_to_taxonomy_id = {
     response_model=list[TaxonomyOut],
 )
 def get_knowledge_taxonomy(query: str = "", db: Session = Depends(get_db)):
-    taxonomy = TaxonomyLister(db, models.Taxonomy, 1)
+    taxonomy = TaxonomyLister(db, models.Taxonomy)
 
     search = taxonomy.search(query)
     return search
+
+
+@router.put(
+    "/taxonomy/{id_taxonomy}",
+    response_model=TaxonomyOut,
+)
+def get_knowledge_taxonomy(id_taxonomy: int, tax_content: TaxonomyForm, db: Session = Depends(get_db)):
+    crud = TaxonomyLister(db, models.Taxonomy)
+    tax = crud.put(id_taxonomy, tax_content)
+    return tax
+
+
+@router.delete(
+    "/taxonomy/{id_taxonomy}"
+)
+def get_knowledge_taxonomy(id_taxonomy: int, db: Session = Depends(get_db)):
+    crud = TaxonomyLister(db, models.Taxonomy)
+    tax = crud.delete(id_taxonomy)
+    return tax
+
+
+@router.post(
+    "/taxonomy",
+    response_model=TaxonomyOut
+)
+def get_knowledge_taxonomy(tax_content: TaxonomyForm, db: Session = Depends(get_db)):
+    crud = TaxonomyLister(db, models.Taxonomy)
+    tax = crud.post(tax_content)
+    return tax
 
 
 @router.get(
@@ -70,23 +99,20 @@ def get_knowledge_taxonomy(query: str = "", db: Session = Depends(get_db)):
     response_model=TaxonomyOut,
 )
 def get_knowledge_taxonomy(taxonomy_id: int, db: Session = Depends(get_db)):
-    taxonomy = TaxonomyLister(db, models.Taxonomy, 1)
+    taxonomy = TaxonomyLister(db, models.Taxonomy)
 
     search = taxonomy.get_item(taxonomy_id)
     return search
 
 
 @router.get("/taxonomy/{subject}")
-def get_knowledge_list(subject: Union[int, str], db: Session = Depends(get_db)):
+def get_knowledge_list(subject: Union[int, str, None], db: Session = Depends(get_db)):
     if type(subject) is str:
         subject = subject_to_taxonomy_id.get(subject)
 
-    if subject not in subject_to_taxonomy_id.values() or subject is None:
-        raise HTTPException(status_code=404, detail="Knowledge subject not found")
-
     # Assume to list only chapter taxonomies
-    paginator = TaxonomyLister(db, models.Taxonomy, subject)
-    return paginator.get_items()
+    paginator = TaxonomyLister(db, models.Taxonomy)
+    return paginator.get_items(subject)
 
 
 @router.get("/chapter/{chapter_id}")
