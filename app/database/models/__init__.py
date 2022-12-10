@@ -11,7 +11,7 @@ from app.database.models.page import (
     DictionaryPage,
     UserQuizAnswer
 )
-from app.database.models.page_type import PageType
+from app.database.models.page_type import (PageType, PageSubType)
 from app.database.models.taxonomy import (
     Taxonomy,
     SubjectTaxonomy,

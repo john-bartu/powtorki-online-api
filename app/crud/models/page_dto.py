@@ -22,6 +22,7 @@ class PageForm(BaseModel):
         orm_mode = True
 
     id_type: int
+    id_sub_type: int
     title: str
     document: str | None
     description: str | None

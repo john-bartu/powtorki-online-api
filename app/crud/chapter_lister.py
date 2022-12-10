@@ -77,12 +77,16 @@ class TaxonomyLister:
         else:
             return self.get_taxonomy_tree(taxonomy.parent, tax_names + [taxonomy.name])
 
-    def search(self, query):
-        taxonomies = (self.db.query(self.model)
-                      .filter(or_(self.model.name.match(query), self.model.name.like(f'%{query}%')))
-                      .limit(30)
-                      .all())
+    def search(self, name_filter: str | None = None, filter_types: List[int] | None = None, ):
+        query = (self.db.query(self.model))
 
+        if name_filter and len(name_filter) > 0:
+            query = query.filter(or_(self.model.name.match(name_filter), self.model.name.like(f'%{name_filter}%')))
+
+        if filter_types and len(filter_types) > 0:
+            query = query.filter(self.model.id_taxonomy_type.in_(filter_types))
+
+        taxonomies = query.limit(30).all()
         for tax in taxonomies:
             tax_tree = self.get_taxonomy_tree(tax)[1:]
             tax.path = tax_tree if len(tax_tree) > 0 else []

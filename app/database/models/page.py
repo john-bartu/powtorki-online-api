@@ -14,6 +14,7 @@ class Page(Base):
     id = Column(Integer, primary_key=True, index=True)
     id_author = Column(Integer, ForeignKey("users.id"))
     id_type = Column(Integer, ForeignKey("page_types.id"))
+    id_sub_type = Column(Integer, ForeignKey("page_sub_types.id"))
     order_no = Column(Integer)
     title = Column(VARCHAR(255))
     document = Column(String)

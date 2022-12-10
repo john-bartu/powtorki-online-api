@@ -35,9 +35,10 @@ class ItemLister:
         self.pagination_limit = limit
 
         self.filter_taxonomies: List[int] = []
-        self.filter_kinds: List[int] = []
+        self.filter_sub_types: List[int] = []
         self.filter_page_types: List[int] = []
         self.filter_name: str = ""
+        self.render_enabled = True
 
         super().__init__()
 
@@ -47,6 +48,7 @@ class ItemLister:
         item.note = form.note
         item.description = form.description
         item.id_type = form.id_type
+        item.id_sub_type = form.id_sub_type
         # item.order_no = form.order_no
 
         current_taxonomy_ids = [tax.id_taxonomy for tax in item.taxonomies]
@@ -87,7 +89,6 @@ class ItemLister:
                 item.date = new_date
                 self.db.add(new_date)
 
-        print(item)
         return item
 
     def post_item(self, form):
@@ -116,15 +117,16 @@ class ItemLister:
                 .options(
             selectin_polymorphic(models.Page, [models.QuizPage, models.DocumentPage, models.CalendarPage]),
             joinedload(models.QuizPage.answers)
-            # .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer)
+            .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer)
             ,
             joinedload(models.DocumentPage.media),
             joinedload(models.CalendarPage.date),
             joinedload(models.Page.taxonomies).joinedload(models.MapPageTaxonomy.taxonomy))
                 .filter(models.Page.id == page_id).first())
 
-        if item.document:
-            item.document = renderer.render(item.document)
+        if self.render_enabled:
+            if item.document:
+                item.document = renderer.render(item.document)
 
         return item
 
@@ -147,17 +149,15 @@ class ItemLister:
 
         if len(self.filter_taxonomies) > 0:
             taxonomies = [get_whole_branch(self.db, [taxonomy]) for taxonomy in self.filter_taxonomies][0]
-            print(taxonomies)
             query = query.filter(
                 models.MapPageTaxonomy.id_taxonomy.in_(taxonomies),
-            )
-        if len(self.filter_kinds) > 0:
-            query = query.filter(
-                models.Page.taxonomies.any(models.MapPageTaxonomy.id_taxonomy.in_(self.filter_kinds)),
             )
 
         if len(self.filter_page_types) > 0:
             query = query.filter(models.Page.id_type.in_(self.filter_page_types))
+
+        if len(self.filter_sub_types) > 0:
+            query = query.filter(models.Page.id_sub_type.in_(self.filter_sub_types))
 
         if len(self.filter_name) > 0:
             query = query.filter(

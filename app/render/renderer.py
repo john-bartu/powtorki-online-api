@@ -1,6 +1,7 @@
 import io
 import re
 
+import html
 import matplotlib.pyplot as plt
 from sqlalchemy.orm import Session
 
@@ -90,26 +91,26 @@ class PageRenderer:
         return result
 
     def math_converter(self, formula):
+        formula = html.unescape(formula)
         fontsize = 16
-        dpi = 300
+        dpi = 150
 
-        fig = plt.figure(figsize=(0.01, 0.01))
-        fig.text(0, 0, r'${}$'.format(formula), fontsize=fontsize)
+        fig = plt.figure()
+        fig.text(0, 0, r'{}'.format(formula), fontsize=fontsize)
 
         output = io.StringIO()
         fig.savefig(output, dpi=dpi, transparent=True, format='svg', bbox_inches='tight', pad_inches=0.1)
+        plt.close()
 
         data = "".join(output.getvalue().split("\n")[3::])
-        print(data)
         return data
 
     def math_renderer(self, content):
-        print("math check")
-        resp = re.sub(r'\[m(.*?)\]', lambda m: self.math_converter(m.group(1)), content)
-        return resp
+        content = re.sub(r'\[math\](.*?)\[\/math\]', lambda m: self.math_converter(m.group(1)), content)
+        content = re.sub(r'\[m\](.*?)\[\/m\]', lambda m: self.math_converter(m.group(1)), content)
+        return content
 
     def render(self, content):
-        print('Session: ', self.session)
         pattern = r'\[(.*?)\]'
         resp = self.math_renderer(content)
         resp = re.sub(pattern, lambda m: self.func(m.group(1)), resp)

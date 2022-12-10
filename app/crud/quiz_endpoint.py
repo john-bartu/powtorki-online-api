@@ -47,8 +47,7 @@ class QuizEndpoint:
             self.session.flush()
             self.session.commit()
         except Exception as e:
-            print("error:")
-            print(str(e))
+            print("error:", str(e))
 
         if compare(answers_id, correct):
             pass  # TODO: return array of answers, null if not match
