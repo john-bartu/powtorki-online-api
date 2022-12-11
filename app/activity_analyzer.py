@@ -6,7 +6,6 @@ from multiprocessing import Pool
 from random import shuffle
 from typing import List
 
-import morfeusz2
 import pandas as pd
 import tqdm
 from fuzzysearch import find_near_matches
@@ -64,7 +63,6 @@ class TextAnalyzer:
     def __init__(self):
         self.tags = []
         self.session: Session = next(get_db())
-        self.morf = morfeusz2.Morfeusz()
 
         # with open('stopwords.txt', encoding='utf8') as file:
         #     self.stop_words = [word.strip() for word in file.readlines()]
