@@ -31,3 +31,9 @@ class Roles:
         1: "admin",
         2: 'user',
     }
+
+
+class ActivitySettings:
+    correct_answer = 1
+    incorrect_answer = -2
+    page_read = 0.25

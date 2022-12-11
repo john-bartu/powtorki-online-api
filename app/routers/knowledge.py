@@ -210,7 +210,9 @@ def get_knowledge_item(page_id: int, db: Session = Depends(get_db)):
     dependencies=[Permission("put", [(Allow, Authenticated, All)])]
 )
 def put_knowledge_item(page_id: int, page_content: PageForm, db: Session = Depends(get_db)):
-    page = ItemLister(db).put_item(page_id, page_content)
+    lister = ItemLister(db)
+    lister.render_enabled = False
+    page = lister.put_item(page_id, page_content)
     if page is None:
         raise HTTPException(status_code=404, detail="Knowledge page not found")
     else:
@@ -219,7 +221,7 @@ def put_knowledge_item(page_id: int, page_content: PageForm, db: Session = Depen
 
 @router.post(
     "/page",
-    dependencies=[Permission("post", [(Allow, Authenticated, All)])]
+    # dependencies=[Permission("post", [(Allow, Authenticated, All)])]
 )
 def put_knowledge_item(page_content: PageForm, db: Session = Depends(get_db)):
     page = ItemLister(db).post_item(page_content)

@@ -9,7 +9,8 @@ from app.database.models.page import (
     QuizPage,
     QAPage,
     DictionaryPage,
-    UserQuizAnswer
+    UserQuizAnswer,
+    UserActivity
 )
 from app.database.models.page_type import (PageType, PageSubType)
 from app.database.models.taxonomy import (

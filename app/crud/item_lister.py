@@ -4,10 +4,10 @@ from typing import List, Union
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
-from app.constants import PageTypes
+from app.constants import PageTypes, ActivitySettings
 from app.crud.models.page_dto import PageForm
 from app.database import models
-from app.helpers import get_whole_branch
+from app.helpers import get_whole_branch, get_descendants
 from app.render.renderer import PageRenderer
 
 
@@ -125,6 +125,12 @@ class ItemLister:
                 .filter(models.Page.id == page_id).first())
 
         if self.render_enabled:
+            user_activity = models.UserActivity()
+            user_activity.id_user = 1
+            user_activity.id_page = item.id
+            user_activity.knowledge = ActivitySettings.page_read
+            self.db.add(user_activity)
+            self.db.commit()
             if item.document:
                 item.document = renderer.render(item.document)
 
@@ -148,7 +154,7 @@ class ItemLister:
             joinedload(models.Page.taxonomies)))
 
         if len(self.filter_taxonomies) > 0:
-            taxonomies = [get_whole_branch(self.db, [taxonomy]) for taxonomy in self.filter_taxonomies][0]
+            taxonomies = [get_descendants(self.db, [taxonomy]) for taxonomy in self.filter_taxonomies][0]
             query = query.filter(
                 models.MapPageTaxonomy.id_taxonomy.in_(taxonomies),
             )
