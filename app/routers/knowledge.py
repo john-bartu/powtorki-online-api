@@ -219,6 +219,20 @@ def put_knowledge_item(page_id: int, page_content: PageForm, db: Session = Depen
         return page
 
 
+@router.delete(
+    "/page/{page_id}",
+    dependencies=[Permission("put", [(Allow, Authenticated, All)])]
+)
+def delete_knowledge_item(page_id: int, db: Session = Depends(get_db)):
+    lister = ItemLister(db)
+    lister.render_enabled = False
+    page = lister.delete_item(page_id)
+    if not page:
+        raise HTTPException(status_code=404, detail="Knowledge page not found")
+    else:
+        return page
+
+
 @router.post(
     "/page",
     # dependencies=[Permission("post", [(Allow, Authenticated, All)])]

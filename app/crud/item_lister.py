@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 from app.constants import PageTypes, ActivitySettings
 from app.crud.models.page_dto import PageForm
 from app.database import models
-from app.helpers import get_whole_branch, get_descendants
+from app.helpers import get_descendants
 from app.render.renderer import PageRenderer
 
 
@@ -109,6 +109,15 @@ class ItemLister:
         self.db.commit()
         return item
 
+    def delete_item(self, page_id: int):
+        try:
+            item = self.get_item(page_id)
+            self.db.delete(item)
+            self.db.commit()
+            return True
+        except:
+            return False
+
     def get_item(self, page_id: int) -> [models.Page, models.QuizPage, models.CalendarPage, models.DictionaryPage,
                                          models.CharacterPage]:
         renderer = PageRenderer()
@@ -173,14 +182,10 @@ class ItemLister:
                 )
             )
 
-        if len(self.filter_page_types) == 1:
-            page_type = self.filter_page_types[0]
-            if page_type == PageTypes.CalendarPage:
+        if len(self.filter_sub_types) == 1:
+            page_type = self.filter_sub_types[0]
+            if page_type == 8:
                 query = query.order_by(models.Date.date_number)
-            elif page_type in [PageTypes.CharacterPage, PageTypes.DictionaryPage]:
-                query = query.order_by(models.Page.title)
-            elif page_type in [PageTypes.VideoScriptPage, PageTypes.DocumentPage, PageTypes.ScriptPage]:
-                query = query.order_by(models.Page.title)  # models.Page.order_no
             else:
                 query = query.order_by(models.Page.title)
         else:
