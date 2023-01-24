@@ -36,8 +36,7 @@ def import_from_file(files: list[UploadFile], taxonomy: int = Form(), page_type:
         new_pages += process_pdf(page_type_to_model[page_type], files)
     elif page_type in [PageTypes.QAPage]:
         for file in files:
-
-            qa_tax = models.QATaxonomy(name=file.filename, id_parent=tax.id)
+            qa_tax = models.Taxonomy(name=file.filename, id_parent=tax.id)
             db.add(qa_tax)
             for quiz_page in process_qa(file):
                 map_page_tax = models.MapPageTaxonomy()

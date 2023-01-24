@@ -15,8 +15,8 @@ class TaxonomyLister:
         super().__init__()
 
     def get_item(self, taxonomy_id: int) -> models.Taxonomy:
-        item = (self.db.query(self.model).
-                options(joinedload(self.model.children))
+        item = (self.db.query(self.model)
+                .options(joinedload(self.model.children))
                 .filter(self.model.id == taxonomy_id)
                 .first())
 
@@ -44,8 +44,10 @@ class TaxonomyLister:
         return item
 
     def delete(self, taxonomy_id: int) -> bool:
-        item = self.db.query(models.Taxonomy).options(joinedload(self.model.children)).filter(
-            models.Taxonomy.id == taxonomy_id).first()
+        item = (self.db.query(models.Taxonomy)
+                .options(joinedload(self.model.children))
+                .filter(models.Taxonomy.id == taxonomy_id)
+                .first())
 
         if (len(item.children)) > 0:
             raise Exception("Cannot remove taxonomy which has related children")

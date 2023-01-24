@@ -96,7 +96,7 @@ class PageRenderer:
         dpi = 150
 
         fig = plt.figure()
-        fig.text(0, 0, r'{}'.format(formula), fontsize=fontsize)
+        fig.text(0, 0, formula, fontsize=fontsize)
 
         output = io.StringIO()
         fig.savefig(output, dpi=dpi, transparent=True, format='svg', bbox_inches='tight', pad_inches=0.1)
@@ -106,8 +106,7 @@ class PageRenderer:
         return data
 
     def math_renderer(self, content):
-        content = re.sub(r'\[math\](.*?)\[\/math\]', lambda m: self.math_converter(m.group(1)), content)
-        content = re.sub(r'\[m\](.*?)\[\/m\]', lambda m: self.math_converter(m.group(1)), content)
+        content = re.sub(r'\[latex\](.*?)\[\/latex\]', lambda m: self.math_converter(m.group(1)), content)
         return content
 
     def render(self, content):

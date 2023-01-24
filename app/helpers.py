@@ -26,11 +26,11 @@ def get_ancestors(db: Session, chapter_ids: list[int]):
                          .filter(models.Taxonomy.id.in_(chapter_ids))
                          .cte('cte', recursive=True))
 
-    taxonomy_child = (db.query(models.Taxonomy)
-                      .with_entities(models.Taxonomy.id, models.Taxonomy.id_parent, models.Taxonomy.id_taxonomy_type)
-                      .join(taxonomy_selected, models.Taxonomy.id == taxonomy_selected.c.id_parent))
+    taxonomy_parent = (db.query(models.Taxonomy)
+                       .with_entities(models.Taxonomy.id, models.Taxonomy.id_parent, models.Taxonomy.id_taxonomy_type)
+                       .join(taxonomy_selected, models.Taxonomy.id == taxonomy_selected.c.id_parent))
 
-    recursive_q = taxonomy_selected.union(taxonomy_child)
+    recursive_q = taxonomy_selected.union(taxonomy_parent)
     return [tax[0] for tax in db.query(recursive_q).all()]
 
 

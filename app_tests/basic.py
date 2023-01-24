@@ -19,14 +19,11 @@ class Database:
 constants = {
     "Page": PageTypes.Page,
     "Document": PageTypes.DocumentPage,
-    "Script": PageTypes.ScriptPage,
     "Character": PageTypes.CharacterPage,
     "Date": PageTypes.CalendarPage,
     "Dictionary": PageTypes.DictionaryPage,
     "QuestionAnswer": PageTypes.QAPage,
     "Quiz": PageTypes.QuizPage,
-    "MindMap": PageTypes.MindmapPage,
-    "Video Script": PageTypes.VideoScriptPage
 }
 
 
