@@ -1,6 +1,6 @@
 import json
 
-from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, String, PrimaryKeyConstraint
+from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, String, PrimaryKeyConstraint, UniqueConstraint
 from sqlalchemy.orm import relationship, Session, backref
 
 from app.constants import TaxonomyTypes
@@ -13,16 +13,17 @@ class MapPageTaxonomy(Base):
 
     id_page = Column(Integer, ForeignKey("pages.id"))
     id_taxonomy = Column(Integer, ForeignKey("taxonomies.id"))
+    order_no = Column(Integer)
 
     taxonomy = relationship('Taxonomy', uselist=False, back_populates="map_pages")
     page = relationship('Page', uselist=False, back_populates="taxonomies")
 
     __table_args__ = (
         PrimaryKeyConstraint(id_page, id_taxonomy),
+        UniqueConstraint(id_taxonomy, order_no)
     )
 
 
-# noinspection DuplicatedCode
 class Taxonomy(Base):
     __tablename__ = "taxonomies"
 
