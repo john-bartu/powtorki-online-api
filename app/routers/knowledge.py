@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi_permissions import Allow, Authenticated, All
@@ -48,11 +48,6 @@ path_to_type = {
     # sprawdz wiedze
     'quiz': PageTypes.QuizPage,
     'qa': PageTypes.QAPage
-}
-
-subject_to_taxonomy_id = {
-    'history': 1,
-    'civics': 2
 }
 
 
@@ -108,35 +103,12 @@ def get_knowledge_taxonomy(tax_content: TaxonomyForm, db: Session = Depends(get_
 
 
 @router.get(
-    "/taxonomy/get/{taxonomy_id}",
-    response_model=TaxonomyOut,
+    "/taxonomy/get/{taxonomy_id}"
 )
 def get_knowledge_taxonomy(taxonomy_id: int, db: Session = Depends(get_db)):
     taxonomy = TaxonomyLister(db, models.Taxonomy)
+    chapter = taxonomy.get_item(taxonomy_id)
 
-    search = taxonomy.get_item(taxonomy_id)
-    return search
-
-
-@router.get("/taxonomy/{subject}")
-def get_knowledge_list(subject: Union[int, str, None], db: Session = Depends(get_db)):
-    if type(subject) is str:
-        subject = subject_to_taxonomy_id.get(subject)
-
-    # Assume to list only chapter taxonomies
-    paginator = TaxonomyLister(db, models.Taxonomy)
-    return paginator.get_items(subject)
-
-
-@router.get("/taxonomy")
-def get_knowledge_list(types: List[int] = Query(default=[]), db: Session = Depends(get_db)):
-    crud = TaxonomyLister(db, models.Taxonomy)
-    return crud.search(filter_types=types)
-
-
-@router.get("/chapter/{chapter_id}")
-def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db)):
-    chapter = db.query(models.Taxonomy).filter(models.Taxonomy.id == chapter_id).first()
     taxonomy_branch = chapter.get_whole_branch(db)
     page_count_per_type = (db.query(models.Page.id_sub_type, func.count(models.Page.id_sub_type))
                            .join(models.MapPageTaxonomy)
@@ -144,7 +116,14 @@ def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db))
                            .group_by(models.Page.id_sub_type)
                            .all())
     chapter.pages = {page_type[0]: {'count': page_type[1]} for page_type in page_count_per_type}
+
     return chapter
+
+
+@router.get("/taxonomy")
+def get_knowledge_list(types: List[int] = Query(default=[]), db: Session = Depends(get_db)):
+    crud = TaxonomyLister(db, models.Taxonomy)
+    return crud.search(filter_types=types)
 
 
 @router.get("/pages")
@@ -174,12 +153,10 @@ def get_knowledge_list(types: List[int | str] = Query(default=[]),
         paginator.filter_sub_types = sub_types
 
     if chapters is not None:
-        paginator.filter_taxonomies = [subject_to_taxonomy_id.get(subject_str)
-                                       if isinstance(subject_str, str)
-                                       else subject_str
-                                       for subject_str in chapters]
+        paginator.filter_taxonomies = chapters
 
-    return paginator.get_items(page_no)
+    items = paginator.get_items(page_no)
+    return items
 
 
 @router.get("/page/{page_id}")

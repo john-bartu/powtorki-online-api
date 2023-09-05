@@ -2,7 +2,8 @@ from random import shuffle
 from typing import List, Union
 
 from sqlalchemy import or_
-from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
+from sqlalchemy.future import select
+from sqlalchemy.orm import Session, joinedload, selectin_polymorphic, aliased, with_polymorphic, selectinload
 
 from app.constants import PageTypes, ActivitySettings
 from app.crud.models.page_dto import PageForm
@@ -145,37 +146,42 @@ class ItemLister:
 
         return item
 
-    def get_items(self, pagination_no: int = 1) -> List[models.Page]:
+    def get_items(self, pagination_no: int = 1) -> List[
+        models.Page | models.QuizPage | models.DocumentPage | models.CalendarPage]:
         if not pagination_no > 0:
             raise ValueError("Page cannot be less than 1")
         pagination_no = pagination_no - 1
 
-        query = (self.db.query(models.Page)  # noqa
-        .join(models.Page.taxonomies)
-        .join(models.CalendarPage.date, isouter=True)
-        .join(models.QuizPage.answers, isouter=True)
-        .options(
-            selectin_polymorphic(models.Page, [models.QuizPage, models.DocumentPage, models.CalendarPage]),
-            joinedload(models.QuizPage.answers)
-            .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer),
-            joinedload(models.DocumentPage.media),
-            joinedload(models.CalendarPage.date),
-            joinedload(models.Page.taxonomies)))
+        query_models = with_polymorphic(models.Page, [models.QuizPage, models.DocumentPage, models.CalendarPage])
+
+        page_quiz = with_polymorphic(models.Page, [models.QuizPage], aliased=True, flat=True)
+        page_doc = with_polymorphic(models.Page, [models.DocumentPage], aliased=True, flat=True)
+        page_calendar = with_polymorphic(models.Page, [models.CalendarPage], aliased=True, flat=True)
+
+        query = (
+            select(models.Page)
+            .join(models.Page.taxonomies)
+            .options(
+                selectin_polymorphic(models.Page, [models.QuizPage, models.DocumentPage, models.CalendarPage]),
+                selectinload(models.QuizPage.answers).load_only(models.PageAnswer.id, models.PageAnswer.id_answer,
+                                                                models.PageAnswer.answer),
+                selectinload(models.DocumentPage.media),
+                selectinload(models.CalendarPage.date)
+            )
+        )
 
         if len(self.filter_taxonomies) > 0:
             taxonomies = [get_descendants(self.db, [taxonomy]) for taxonomy in self.filter_taxonomies][0]
-            query = query.filter(
-                models.MapPageTaxonomy.id_taxonomy.in_(taxonomies),
-            )
+            query = query.where(models.MapPageTaxonomy.id_taxonomy.in_(taxonomies))
 
         if len(self.filter_page_types) > 0:
-            query = query.filter(models.Page.id_type.in_(self.filter_page_types))
+            query = query.where(models.Page.id_type.in_(self.filter_page_types))
 
         if len(self.filter_sub_types) > 0:
-            query = query.filter(models.Page.id_sub_type.in_(self.filter_sub_types))
+            query = query.where(models.Page.id_sub_type.in_(self.filter_sub_types))
 
         if len(self.filter_name) > 0:
-            query = query.filter(
+            query = query.where(
                 or_(
                     models.Page.title.match(self.filter_name),
                     models.Page.title.like(f'%{self.filter_name}%')
@@ -191,9 +197,21 @@ class ItemLister:
         else:
             query = query.order_by(models.Page.title)
 
-        results = (query.distinct(models.Page.id).from_self()
-                   .offset(self.pagination_limit * pagination_no).limit(self.pagination_limit)
-                   .all())
+        query = query.subquery()
+
+        qa = aliased(query_models, query)
+
+        print(query)
+
+        stmt = (
+            select(qa)
+            .distinct()
+            .offset(self.pagination_limit * pagination_no)
+            .limit(self.pagination_limit)
+        )
+
+        results = self.db.execute(stmt).scalars().all()
+
         for page in results:
             if page.id_type == PageTypes.QuizPage:
                 shuffle(page.answers)

@@ -16,20 +16,13 @@ class TaxonomyLister:
 
     def get_item(self, taxonomy_id: int) -> models.Taxonomy:
         item = (self.db.query(self.model)
-                .options(joinedload(self.model.children))
+                .options(joinedload(self.model.children).subqueryload(self.model.children))
                 .filter(self.model.id == taxonomy_id)
                 .first())
 
-        tax_tree = self.get_taxonomy_tree(item)[1:]
-        item.path = tax_tree if len(tax_tree) > 0 else []
+        # tax_tree = self.get_taxonomy_tree(item)[1:]
+        # item.path = tax_tree if len(tax_tree) > 0 else []
         return item
-
-    def get_items(self, parent_id: int) -> List[models.Taxonomy]:
-        items = (self.db.query(self.model).
-                 options(joinedload(self.model.children))
-                 .filter(self.model.id_parent == parent_id)
-                 .all())
-        return items
 
     def post(self, form: TaxonomyForm) -> models.Taxonomy:
         item = models.Taxonomy()
@@ -79,7 +72,7 @@ class TaxonomyLister:
         else:
             return self.get_taxonomy_tree(taxonomy.parent, tax_names + [taxonomy.name])
 
-    def search(self, name_filter: str | None = None, filter_types: List[int] | None = None, ):
+    def search(self, name_filter: str | None = None, filter_types: List[int] | None = None):
         query = (self.db.query(self.model))
 
         if name_filter and len(name_filter) > 0:

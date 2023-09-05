@@ -1,5 +1,5 @@
 fastapi
-SQLAlchemy
+SQLAlchemy==2.0.9
 pydantic
 python-dotenv
 fastapi-sessions
@@ -20,7 +20,6 @@ matplotlib
 cryptography
 PyJWT
 passlib
-html
 tqdm
 fuzzysearch
 fastapi_permissions
