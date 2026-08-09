@@ -11,7 +11,7 @@ load_dotenv()
 
 bind = os.getenv("GUNICORN_BIND", "127.0.0.1:8000")
 
-workers = 4
+workers = 2
 worker_class = UvicornWorker
 
 keepalive = 5
@@ -19,7 +19,7 @@ keepalive = 5
 max_requests = 2000
 max_requests_jitter = 200
 
-timeout = 120
+timeout = 30
 graceful_timeout = 30
 
 accesslog = "-"
