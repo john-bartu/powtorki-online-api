@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.services.quiz_service import QuizService
 from app.database.database import get_db
+from app.services.quiz_service import QuizService
 
 router = APIRouter()
 

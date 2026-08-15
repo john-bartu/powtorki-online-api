@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 
+from app.constants import TaxonomyTypes
 from app.database import models
 from app.database.database import get_db
-from app.constants import TaxonomyTypes
 
 router = APIRouter(prefix="/sitemap", tags=["sitemap"])
+
 
 @router.get("/subjects")
 def get_sitemap_subjects(db: Session = Depends(get_db)):
@@ -19,6 +19,7 @@ def get_sitemap_subjects(db: Session = Depends(get_db)):
         .all()
     )
     return [dict(row._mapping) for row in subjects]
+
 
 @router.get("/taxonomies")
 def get_sitemap_taxonomies(db: Session = Depends(get_db)):
@@ -49,6 +50,7 @@ def get_sitemap_taxonomies(db: Session = Depends(get_db)):
     ).all()
 
     return [dict(row._mapping) for row in results]
+
 
 @router.get("/pages")
 def get_sitemap_pages(db: Session = Depends(get_db)):

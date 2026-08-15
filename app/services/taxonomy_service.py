@@ -1,8 +1,8 @@
 from sqlalchemy import or_, func
 from sqlalchemy.orm import Session, joinedload
 
-from app.services.models.taxonomy_dto import TaxonomyForm, TaxonomyOut
 from app.database import models
+from app.services.models.taxonomy_dto import TaxonomyForm, TaxonomyOut
 
 
 class TaxonomyService:

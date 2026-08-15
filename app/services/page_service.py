@@ -1,14 +1,14 @@
-from random import shuffle
 import logging
+from random import shuffle
 
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
 from app.constants import PageTypes, ActivitySettings, PageSubTypes
-from app.services.taxonomy_service import TaxonomyService
-from app.services.models.page_dto import PageForm, PagedResult, PageDTO
 from app.database import models
 from app.helpers import get_descendants, find_branch_conflict
 from app.render.renderer import PageRenderer
+from app.services.models.page_dto import PageForm, PagedResult, PageDTO
+from app.services.taxonomy_service import TaxonomyService
 
 logger = logging.getLogger(__name__)
 

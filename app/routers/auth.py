@@ -6,7 +6,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_permissions import All, Allow, Authenticated
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import authenticate_user, Token, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, TokenData, get_current_user
+from app.auth.dependencies import authenticate_user, Token, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, TokenData, \
+    get_current_user
 from app.auth.permissions import Permission
 from app.constants import Roles
 from app.database.database import get_db

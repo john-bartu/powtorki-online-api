@@ -1,6 +1,6 @@
+import logging
 import shutil
 import uuid
-import logging
 from pathlib import Path
 
 from PIL import Image
@@ -11,46 +11,16 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import TokenData, get_current_user_optional, is_admin
 from app.auth.permissions import Permission
-from app.constants import PageTypes, KnowledgeTypes, Roles
-from app.services.taxonomy_service import TaxonomyService
-from app.services.page_service import PageService, TaxonomyBranchConflictError
-from app.services.models.page_dto import PageForm, PageTaxonomyMoveForm
-from app.services.models.taxonomy_dto import TaxonomyOut, TaxonomyForm
+from app.constants import Roles
 from app.database import models
 from app.database.database import get_db
+from app.services.models.page_dto import PageForm, PageTaxonomyMoveForm
+from app.services.models.taxonomy_dto import TaxonomyOut, TaxonomyForm
+from app.services.page_service import PageService, TaxonomyBranchConflictError
+from app.services.taxonomy_service import TaxonomyService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-path_to_model = {
-    # podstawowa
-
-    # lesson_video
-    'document': models.DocumentPage,
-
-    # uzupelnienia
-    'character': models.CharacterPage,
-    'dictionary': models.DictionaryPage,
-    'date': models.CalendarPage,
-
-    # sprawdz wiedze
-    'quiz': models.QuizPage,
-    'qa': models.QAPage
-}
-
-path_to_type = {
-    'document': PageTypes.DocumentPage,
-    'character': PageTypes.CharacterPage,
-    'dictionary': PageTypes.DictionaryPage,
-    'date': PageTypes.CalendarPage,
-    'quiz': PageTypes.QuizPage,
-    'qa': PageTypes.QAPage
-}
-
-subject_to_taxonomy_id = {
-    'history': KnowledgeTypes.History,
-    'civics': KnowledgeTypes.Civics
-}
 
 
 @router.get(
@@ -136,45 +106,27 @@ def move_taxonomy_page(taxonomy_id: int, page_id: int, form: PageTaxonomyMoveFor
 
 
 @router.get("/pages")
-def get_knowledge_pages_list(types: list[int | str] = Query(default=[]),
-                       chapters: list[int] = Query(default=[]),
-                       sub_types: list[int] = Query(default=[]),
-                       query: str = Query(default=""),
-                       page_no: int = 1,
-                       current_user: TokenData | None = Depends(get_current_user_optional),
-                       db: Session = Depends(get_db)):
+def get_knowledge_pages_list(chapters: list[int] = Query(default=[]),
+                             sub_types: list[int] = Query(default=[]),
+                             query: str = Query(default=""),
+                             page_no: int = 1,
+                             current_user: TokenData | None = Depends(get_current_user_optional),
+                             db: Session = Depends(get_db)):
     paginator = PageService(db)
-
-    if types is not None:
-        types_list = []
-        for type_str_or_int in types:
-            try:
-                parsed = int(type_str_or_int)
-                types_list.append(parsed)
-            except ValueError:
-                types_list.append(path_to_type.get(type_str_or_int))
-
-        paginator.filter_page_types = types_list
 
     if query != "":
         paginator.filter_name = query
 
-    if sub_types is not None:
-        paginator.filter_sub_types = sub_types
-
-    if chapters is not None:
-        paginator.filter_taxonomies = [subject_to_taxonomy_id.get(subject_str)
-                                       if isinstance(subject_str, str)
-                                       else subject_str
-                                       for subject_str in chapters]
+    paginator.filter_sub_types = sub_types
+    paginator.filter_taxonomies = chapters
 
     return paginator.get_items(page_no, include_correct_answers=is_admin(current_user))
 
 
 @router.get("/page/{page_id}")
 def get_knowledge_item(page_id: int,
-                        current_user: TokenData | None = Depends(get_current_user_optional),
-                        db: Session = Depends(get_db)):
+                       current_user: TokenData | None = Depends(get_current_user_optional),
+                       db: Session = Depends(get_db)):
     page = PageService(db).get_item(page_id, include_correct_answers=is_admin(current_user))
     if page is None:
         raise HTTPException(status_code=404, detail="Knowledge page not found")
@@ -187,8 +139,8 @@ def get_knowledge_item(page_id: int,
     dependencies=[Permission("add", [(Allow, Roles.AdminPrincipal, All)])]
 )
 def get_knowledge_item(page_id: int,
-                        current_user: TokenData | None = Depends(get_current_user_optional),
-                        db: Session = Depends(get_db)):
+                       current_user: TokenData | None = Depends(get_current_user_optional),
+                       db: Session = Depends(get_db)):
     lister = PageService(db)
     lister.render_enabled = False
     page = lister.get_item(page_id, include_correct_answers=is_admin(current_user))
@@ -252,17 +204,17 @@ async def post_file(file: UploadFile):
     file_path = Path(file.filename)
     extension = file_path.suffix
     new_name = uuid.uuid4()
-    
+
     file_hq_dir = Path("file-upload/original")
     file_hq_dir.mkdir(parents=True, exist_ok=True)
     file_hq_location = file_hq_dir / f"{new_name}{extension}"
-    
+
     file_compressed_dir = Path("file-upload")
     file_compressed_dir.mkdir(parents=True, exist_ok=True)
     file_compressed_location = file_compressed_dir / f"{new_name}.webp"
-    
+
     file_shadow_location = f"media-upload/{new_name}{extension}"
-    
+
     with file_hq_location.open("wb+") as file_object:
         # noinspection PyTypeChecker
         shutil.copyfileobj(file.file, file_object)
