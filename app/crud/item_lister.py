@@ -4,7 +4,7 @@ import logging
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
 from app.constants import PageTypes, ActivitySettings, PageSubTypes
-from app.crud.chapter_lister import TaxonomyLister
+from app.crud.taxonomy_lister import TaxonomyLister
 from app.crud.models.page_dto import PageForm, PagedResult, PageDTO
 from app.database import models
 from app.helpers import get_descendants, find_branch_conflict

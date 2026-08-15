@@ -1,4 +1,4 @@
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from sqlalchemy.orm import Session, joinedload
 
 from app.crud.models.taxonomy_dto import TaxonomyForm, TaxonomyOut
@@ -10,6 +10,20 @@ class TaxonomyLister:
     def __init__(self, db: Session, model: type[models.Taxonomy] = models.Taxonomy) -> None:
         self.db = db
         self.model = model
+
+    def get(self, taxonomy_id: int) -> models.Taxonomy | None:
+        item = self.db.query(self.model).filter(self.model.id == taxonomy_id).first()
+        if item is None:
+            return None
+
+        taxonomy_branch = item.get_whole_branch(self.db)
+        page_count_per_type = (self.db.query(models.Page.id_sub_type, func.count(models.Page.id_sub_type))
+                               .join(models.MapPageTaxonomy)
+                               .filter(models.MapPageTaxonomy.id_taxonomy.in_(taxonomy_branch))
+                               .group_by(models.Page.id_sub_type)
+                               .all())
+        item.pages = {page_type[0]: {'count': page_type[1]} for page_type in page_count_per_type}
+        return item
 
     def get_items(self, parent_id: int | None) -> list[TaxonomyOut]:
         items = (self.db.query(self.model).

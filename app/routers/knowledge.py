@@ -7,13 +7,12 @@ from PIL import Image
 from PIL.Image import Resampling
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from fastapi_permissions import Allow, All
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import TokenData, get_current_user_optional, is_admin
 from app.auth.permissions import Permission
 from app.constants import PageTypes, KnowledgeTypes, Roles
-from app.crud.chapter_lister import TaxonomyLister
+from app.crud.taxonomy_lister import TaxonomyLister
 from app.crud.item_lister import ItemLister, TaxonomyBranchConflictError
 from app.crud.models.page_dto import PageForm, PageTaxonomyMoveForm
 from app.crud.models.taxonomy_dto import TaxonomyOut, TaxonomyForm
@@ -119,15 +118,10 @@ def get_knowledge_taxonomy_list(types: list[int] = Query(default=[]), db: Sessio
 
 @router.get("/taxonomy/{taxonomy_id}")
 def get_knowledge_taxonomy_detail(taxonomy_id: int, db: Session = Depends(get_db)):
-    chapter = db.query(models.Taxonomy).filter(models.Taxonomy.id == taxonomy_id).first()
-    taxonomy_branch = chapter.get_whole_branch(db)
-    page_count_per_type = (db.query(models.Page.id_sub_type, func.count(models.Page.id_sub_type))
-                           .join(models.MapPageTaxonomy)
-                           .filter(models.MapPageTaxonomy.id_taxonomy.in_(taxonomy_branch))
-                           .group_by(models.Page.id_sub_type)
-                           .all())
-    chapter.pages = {page_type[0]: {'count': page_type[1]} for page_type in page_count_per_type}
-    return chapter
+    taxonomy = TaxonomyLister(db, models.Taxonomy).get(taxonomy_id)
+    if taxonomy is None:
+        raise HTTPException(status_code=404, detail="Taxonomy not found")
+    return taxonomy
 
 
 @router.put(
