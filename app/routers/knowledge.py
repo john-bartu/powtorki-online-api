@@ -116,7 +116,7 @@ def get_single_knowledge_taxonomy(taxonomy_id: int, db: Session = Depends(get_db
 
 
 @router.get("/taxonomy/{subject}")
-def get_knowledge_by_subject(subject: int, db: Session = Depends(get_db)):
+def get_knowledge_by_subject(subject: int|None, db: Session = Depends(get_db)):
     # Assume to list only chapter taxonomies
     paginator = TaxonomyLister(db, models.Taxonomy)
     return paginator.get_items(subject)

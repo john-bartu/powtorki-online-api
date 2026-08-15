@@ -1,4 +1,3 @@
-
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
@@ -25,7 +24,7 @@ class TaxonomyLister:
         item.path = tax_tree if len(tax_tree) > 0 else []
         return TaxonomyOut.model_validate(item)
 
-    def get_items(self, parent_id: int) -> list[TaxonomyOut]:
+    def get_items(self, parent_id: int | None) -> list[TaxonomyOut]:
         items = (self.db.query(self.model).
                  options(joinedload(self.model.children))
                  .filter(self.model.id_parent == parent_id)
