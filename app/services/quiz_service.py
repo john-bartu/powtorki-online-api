@@ -14,7 +14,7 @@ def compare(s, t):
     return Counter(s) == Counter(t)
 
 
-class QuizEndpoint:
+class QuizService:
 
     def __init__(self, session: Session, quiz_id: int):
         self.session = session

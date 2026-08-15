@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar, List, Optional
 from pydantic import BaseModel, ConfigDict
-from app.crud.models.taxonomy_dto import TaxonomyOut
+from app.services.models.taxonomy_dto import TaxonomyOut
 
 
 class TaxonomyMapForm(BaseModel):

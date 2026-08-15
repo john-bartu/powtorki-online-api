@@ -1,11 +1,11 @@
 from sqlalchemy import or_, func
 from sqlalchemy.orm import Session, joinedload
 
-from app.crud.models.taxonomy_dto import TaxonomyForm, TaxonomyOut
+from app.services.models.taxonomy_dto import TaxonomyForm, TaxonomyOut
 from app.database import models
 
 
-class TaxonomyLister:
+class TaxonomyService:
 
     def __init__(self, db: Session, model: type[models.Taxonomy] = models.Taxonomy) -> None:
         self.db = db

@@ -4,8 +4,8 @@ import logging
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
 from app.constants import PageTypes, ActivitySettings, PageSubTypes
-from app.crud.taxonomy_lister import TaxonomyLister
-from app.crud.models.page_dto import PageForm, PagedResult, PageDTO
+from app.services.taxonomy_service import TaxonomyService
+from app.services.models.page_dto import PageForm, PagedResult, PageDTO
 from app.database import models
 from app.helpers import get_descendants, find_branch_conflict
 from app.render.renderer import PageRenderer
@@ -40,7 +40,7 @@ def _strip_correct_answers(dto: PageDTO) -> None:
         answer.is_correct = None
 
 
-class ItemLister:
+class PageService:
 
     def __init__(self, db: Session, limit: int = 20) -> None:
         self.db = db
@@ -256,7 +256,7 @@ class ItemLister:
             if page.id_type == PageTypes.QuizPage:
                 shuffle(page.answers)
 
-        tax_lister = TaxonomyLister(self.db)
+        tax_lister = TaxonomyService(self.db)
         for page in results:
             for tax_map in page.taxonomies:
                 tax_map.taxonomy.path = tax_lister.get_taxonomy_tree(tax_map.taxonomy)[1:]

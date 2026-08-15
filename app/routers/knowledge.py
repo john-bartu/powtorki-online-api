@@ -12,10 +12,10 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import TokenData, get_current_user_optional, is_admin
 from app.auth.permissions import Permission
 from app.constants import PageTypes, KnowledgeTypes, Roles
-from app.crud.taxonomy_lister import TaxonomyLister
-from app.crud.item_lister import ItemLister, TaxonomyBranchConflictError
-from app.crud.models.page_dto import PageForm, PageTaxonomyMoveForm
-from app.crud.models.taxonomy_dto import TaxonomyOut, TaxonomyForm
+from app.services.taxonomy_service import TaxonomyService
+from app.services.page_service import PageService, TaxonomyBranchConflictError
+from app.services.models.page_dto import PageForm, PageTaxonomyMoveForm
+from app.services.models.taxonomy_dto import TaxonomyOut, TaxonomyForm
 from app.database import models
 from app.database.database import get_db
 
@@ -65,7 +65,7 @@ def get_knowledge_types(db: Session = Depends(get_db)):
     response_model=list[TaxonomyOut],
 )
 def search_knowledge_taxonomy(query: str = "", db: Session = Depends(get_db)):
-    taxonomy = TaxonomyLister(db, models.Taxonomy)
+    taxonomy = TaxonomyService(db, models.Taxonomy)
 
     search = taxonomy.search(query)
     return search
@@ -77,7 +77,7 @@ def search_knowledge_taxonomy(query: str = "", db: Session = Depends(get_db)):
     dependencies=[Permission("put", [(Allow, Roles.AdminPrincipal, All)])]
 )
 def update_knowledge_taxonomy(taxonomy_id: int, tax_content: TaxonomyForm, db: Session = Depends(get_db)):
-    crud = TaxonomyLister(db, models.Taxonomy)
+    crud = TaxonomyService(db, models.Taxonomy)
     tax = crud.put(taxonomy_id, tax_content)
     return tax
 
@@ -88,7 +88,7 @@ def update_knowledge_taxonomy(taxonomy_id: int, tax_content: TaxonomyForm, db: S
 
 )
 def delete_knowledge_taxonomy(taxonomy_id: int, db: Session = Depends(get_db)):
-    crud = TaxonomyLister(db, models.Taxonomy)
+    crud = TaxonomyService(db, models.Taxonomy)
     tax = crud.delete(taxonomy_id)
     return tax
 
@@ -99,26 +99,26 @@ def delete_knowledge_taxonomy(taxonomy_id: int, db: Session = Depends(get_db)):
     dependencies=[Permission("add", [(Allow, Roles.AdminPrincipal, All)])]
 )
 def create_knowledge_taxonomy(tax_content: TaxonomyForm, db: Session = Depends(get_db)):
-    crud = TaxonomyLister(db, models.Taxonomy)
+    crud = TaxonomyService(db, models.Taxonomy)
     tax = crud.post(tax_content)
     return tax
 
 
 @router.get("/taxonomy/{taxonomy_id}/children")
 def get_knowledge_taxonomy_children(taxonomy_id: int, db: Session = Depends(get_db)):
-    paginator = TaxonomyLister(db, models.Taxonomy)
+    paginator = TaxonomyService(db, models.Taxonomy)
     return paginator.get_items(taxonomy_id)
 
 
 @router.get("/taxonomy")
 def get_knowledge_taxonomy_list(types: list[int] = Query(default=[]), db: Session = Depends(get_db)):
-    crud = TaxonomyLister(db, models.Taxonomy)
+    crud = TaxonomyService(db, models.Taxonomy)
     return crud.search(filter_types=types)
 
 
 @router.get("/taxonomy/{taxonomy_id}")
 def get_knowledge_taxonomy_detail(taxonomy_id: int, db: Session = Depends(get_db)):
-    taxonomy = TaxonomyLister(db, models.Taxonomy).get(taxonomy_id)
+    taxonomy = TaxonomyService(db, models.Taxonomy).get(taxonomy_id)
     if taxonomy is None:
         raise HTTPException(status_code=404, detail="Taxonomy not found")
     return taxonomy
@@ -130,7 +130,7 @@ def get_knowledge_taxonomy_detail(taxonomy_id: int, db: Session = Depends(get_db
 )
 def move_taxonomy_page(taxonomy_id: int, page_id: int, form: PageTaxonomyMoveForm, db: Session = Depends(get_db)):
     try:
-        return ItemLister(db).move_page_taxonomy(page_id, taxonomy_id, form.id_taxonomy_from)
+        return PageService(db).move_page_taxonomy(page_id, taxonomy_id, form.id_taxonomy_from)
     except TaxonomyBranchConflictError as e:
         raise HTTPException(status_code=409, detail=str(e))
 
@@ -143,7 +143,7 @@ def get_knowledge_pages_list(types: list[int | str] = Query(default=[]),
                        page_no: int = 1,
                        current_user: TokenData | None = Depends(get_current_user_optional),
                        db: Session = Depends(get_db)):
-    paginator = ItemLister(db)
+    paginator = PageService(db)
 
     if types is not None:
         types_list = []
@@ -175,7 +175,7 @@ def get_knowledge_pages_list(types: list[int | str] = Query(default=[]),
 def get_knowledge_item(page_id: int,
                         current_user: TokenData | None = Depends(get_current_user_optional),
                         db: Session = Depends(get_db)):
-    page = ItemLister(db).get_item(page_id, include_correct_answers=is_admin(current_user))
+    page = PageService(db).get_item(page_id, include_correct_answers=is_admin(current_user))
     if page is None:
         raise HTTPException(status_code=404, detail="Knowledge page not found")
     else:
@@ -189,7 +189,7 @@ def get_knowledge_item(page_id: int,
 def get_knowledge_item(page_id: int,
                         current_user: TokenData | None = Depends(get_current_user_optional),
                         db: Session = Depends(get_db)):
-    lister = ItemLister(db)
+    lister = PageService(db)
     lister.render_enabled = False
     page = lister.get_item(page_id, include_correct_answers=is_admin(current_user))
     if page is None:
@@ -203,7 +203,7 @@ def get_knowledge_item(page_id: int,
     dependencies=[Permission("put", [(Allow, Roles.AdminPrincipal, All)])]
 )
 def put_knowledge_item(page_id: int, page_content: PageForm, db: Session = Depends(get_db)):
-    lister = ItemLister(db)
+    lister = PageService(db)
     lister.render_enabled = False
     try:
         page = lister.put_item(page_id, page_content)
@@ -220,7 +220,7 @@ def put_knowledge_item(page_id: int, page_content: PageForm, db: Session = Depen
     dependencies=[Permission("put", [(Allow, Roles.AdminPrincipal, All)])]
 )
 def delete_knowledge_item(page_id: int, db: Session = Depends(get_db)):
-    lister = ItemLister(db)
+    lister = PageService(db)
     lister.render_enabled = False
     page = lister.delete_item(page_id)
     if not page:
@@ -235,7 +235,7 @@ def delete_knowledge_item(page_id: int, db: Session = Depends(get_db)):
 )
 def post_knowledge_item(page_content: PageForm, db: Session = Depends(get_db)):
     try:
-        page = ItemLister(db).post_item(page_content)
+        page = PageService(db).post_item(page_content)
     except TaxonomyBranchConflictError as e:
         raise HTTPException(status_code=409, detail=str(e))
     if page is None:
