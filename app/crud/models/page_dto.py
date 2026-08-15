@@ -69,13 +69,6 @@ class DateDTO(BaseModel):
     date_text: str
 
 
-class PageSummaryDTO(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    title: str
-    id_sub_type: int
-
-
 class PageDTO(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int

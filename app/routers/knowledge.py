@@ -6,15 +6,16 @@ from pathlib import Path
 from PIL import Image
 from PIL.Image import Resampling
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
-from fastapi_permissions import Allow, Authenticated, All
+from fastapi_permissions import Allow, All
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.auth.dependencies import TokenData, get_current_user_optional, is_admin
 from app.auth.permissions import Permission
-from app.constants import PageTypes, KnowledgeTypes
+from app.constants import PageTypes, KnowledgeTypes, Roles
 from app.crud.chapter_lister import TaxonomyLister
 from app.crud.item_lister import ItemLister, TaxonomyBranchConflictError
-from app.crud.models.page_dto import PageForm, PageTaxonomyMoveForm, PageSummaryDTO
+from app.crud.models.page_dto import PageForm, PageTaxonomyMoveForm
 from app.crud.models.taxonomy_dto import TaxonomyOut, TaxonomyForm
 from app.database import models
 from app.database.database import get_db
@@ -72,31 +73,31 @@ def search_knowledge_taxonomy(query: str = "", db: Session = Depends(get_db)):
 
 
 @router.put(
-    "/taxonomy/{id_taxonomy}",
+    "/taxonomy/{taxonomy_id}",
     response_model=TaxonomyOut,
-    dependencies=[Permission("put", [(Allow, Authenticated, All)])]
+    dependencies=[Permission("put", [(Allow, Roles.AdminPrincipal, All)])]
 )
-def update_knowledge_taxonomy(id_taxonomy: int, tax_content: TaxonomyForm, db: Session = Depends(get_db)):
+def update_knowledge_taxonomy(taxonomy_id: int, tax_content: TaxonomyForm, db: Session = Depends(get_db)):
     crud = TaxonomyLister(db, models.Taxonomy)
-    tax = crud.put(id_taxonomy, tax_content)
+    tax = crud.put(taxonomy_id, tax_content)
     return tax
 
 
 @router.delete(
-    "/taxonomy/{id_taxonomy}",
-    dependencies=[Permission("delete", [(Allow, Authenticated, All)])]
+    "/taxonomy/{taxonomy_id}",
+    dependencies=[Permission("delete", [(Allow, Roles.AdminPrincipal, All)])]
 
 )
-def delete_knowledge_taxonomy(id_taxonomy: int, db: Session = Depends(get_db)):
+def delete_knowledge_taxonomy(taxonomy_id: int, db: Session = Depends(get_db)):
     crud = TaxonomyLister(db, models.Taxonomy)
-    tax = crud.delete(id_taxonomy)
+    tax = crud.delete(taxonomy_id)
     return tax
 
 
 @router.post(
     "/taxonomy",
     response_model=TaxonomyOut,
-    dependencies=[Permission("add", [(Allow, Authenticated, All)])]
+    dependencies=[Permission("add", [(Allow, Roles.AdminPrincipal, All)])]
 )
 def create_knowledge_taxonomy(tax_content: TaxonomyForm, db: Session = Depends(get_db)):
     crud = TaxonomyLister(db, models.Taxonomy)
@@ -104,22 +105,10 @@ def create_knowledge_taxonomy(tax_content: TaxonomyForm, db: Session = Depends(g
     return tax
 
 
-@router.get(
-    "/taxonomy/get/{taxonomy_id}",
-    response_model=TaxonomyOut,
-)
-def get_single_knowledge_taxonomy(taxonomy_id: int, db: Session = Depends(get_db)):
-    taxonomy = TaxonomyLister(db, models.Taxonomy)
-
-    search = taxonomy.get_item(taxonomy_id)
-    return search
-
-
-@router.get("/taxonomy/{subject}")
-def get_knowledge_by_subject(subject: int|None, db: Session = Depends(get_db)):
-    # Assume to list only chapter taxonomies
+@router.get("/taxonomy/{taxonomy_id}/children")
+def get_knowledge_taxonomy_children(taxonomy_id: int, db: Session = Depends(get_db)):
     paginator = TaxonomyLister(db, models.Taxonomy)
-    return paginator.get_items(subject)
+    return paginator.get_items(taxonomy_id)
 
 
 @router.get("/taxonomy")
@@ -128,9 +117,9 @@ def get_knowledge_taxonomy_list(types: list[int] = Query(default=[]), db: Sessio
     return crud.search(filter_types=types)
 
 
-@router.get("/chapter/{chapter_id}")
-def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db)):
-    chapter = db.query(models.Taxonomy).filter(models.Taxonomy.id == chapter_id).first()
+@router.get("/taxonomy/{taxonomy_id}")
+def get_knowledge_taxonomy_detail(taxonomy_id: int, db: Session = Depends(get_db)):
+    chapter = db.query(models.Taxonomy).filter(models.Taxonomy.id == taxonomy_id).first()
     taxonomy_branch = chapter.get_whole_branch(db)
     page_count_per_type = (db.query(models.Page.id_sub_type, func.count(models.Page.id_sub_type))
                            .join(models.MapPageTaxonomy)
@@ -141,17 +130,9 @@ def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db))
     return chapter
 
 
-@router.get(
-    "/taxonomy/{taxonomy_id}/pages",
-    response_model=list[PageSummaryDTO],
-)
-def get_taxonomy_pages(taxonomy_id: int, db: Session = Depends(get_db)):
-    return ItemLister(db).get_taxonomy_pages(taxonomy_id)
-
-
 @router.put(
     "/taxonomy/{taxonomy_id}/pages/{page_id}",
-    dependencies=[Permission("put", [(Allow, Authenticated, All)])]
+    dependencies=[Permission("put", [(Allow, Roles.AdminPrincipal, All)])]
 )
 def move_taxonomy_page(taxonomy_id: int, page_id: int, form: PageTaxonomyMoveForm, db: Session = Depends(get_db)):
     try:
@@ -166,6 +147,7 @@ def get_knowledge_pages_list(types: list[int | str] = Query(default=[]),
                        sub_types: list[int] = Query(default=[]),
                        query: str = Query(default=""),
                        page_no: int = 1,
+                       current_user: TokenData | None = Depends(get_current_user_optional),
                        db: Session = Depends(get_db)):
     paginator = ItemLister(db)
 
@@ -192,12 +174,14 @@ def get_knowledge_pages_list(types: list[int | str] = Query(default=[]),
                                        else subject_str
                                        for subject_str in chapters]
 
-    return paginator.get_items(page_no)
+    return paginator.get_items(page_no, include_correct_answers=is_admin(current_user))
 
 
 @router.get("/page/{page_id}")
-def get_knowledge_item(page_id: int, db: Session = Depends(get_db)):
-    page = ItemLister(db).get_item(page_id)
+def get_knowledge_item(page_id: int,
+                        current_user: TokenData | None = Depends(get_current_user_optional),
+                        db: Session = Depends(get_db)):
+    page = ItemLister(db).get_item(page_id, include_correct_answers=is_admin(current_user))
     if page is None:
         raise HTTPException(status_code=404, detail="Knowledge page not found")
     else:
@@ -206,12 +190,14 @@ def get_knowledge_item(page_id: int, db: Session = Depends(get_db)):
 
 @router.get(
     "/page/{page_id}/raw",
-    dependencies=[Permission("add", [(Allow, Authenticated, All)])]
+    dependencies=[Permission("add", [(Allow, Roles.AdminPrincipal, All)])]
 )
-def get_knowledge_item(page_id: int, db: Session = Depends(get_db)):
+def get_knowledge_item(page_id: int,
+                        current_user: TokenData | None = Depends(get_current_user_optional),
+                        db: Session = Depends(get_db)):
     lister = ItemLister(db)
     lister.render_enabled = False
-    page = lister.get_item(page_id)
+    page = lister.get_item(page_id, include_correct_answers=is_admin(current_user))
     if page is None:
         raise HTTPException(status_code=404, detail="Knowledge page not found")
     else:
@@ -220,7 +206,7 @@ def get_knowledge_item(page_id: int, db: Session = Depends(get_db)):
 
 @router.put(
     "/page/{page_id}",
-    dependencies=[Permission("put", [(Allow, Authenticated, All)])]
+    dependencies=[Permission("put", [(Allow, Roles.AdminPrincipal, All)])]
 )
 def put_knowledge_item(page_id: int, page_content: PageForm, db: Session = Depends(get_db)):
     lister = ItemLister(db)
@@ -237,7 +223,7 @@ def put_knowledge_item(page_id: int, page_content: PageForm, db: Session = Depen
 
 @router.delete(
     "/page/{page_id}",
-    dependencies=[Permission("put", [(Allow, Authenticated, All)])]
+    dependencies=[Permission("put", [(Allow, Roles.AdminPrincipal, All)])]
 )
 def delete_knowledge_item(page_id: int, db: Session = Depends(get_db)):
     lister = ItemLister(db)
@@ -251,7 +237,7 @@ def delete_knowledge_item(page_id: int, db: Session = Depends(get_db)):
 
 @router.post(
     "/page",
-    dependencies=[Permission("post", [(Allow, Authenticated, All)])]
+    dependencies=[Permission("post", [(Allow, Roles.AdminPrincipal, All)])]
 )
 def post_knowledge_item(page_content: PageForm, db: Session = Depends(get_db)):
     try:
@@ -266,7 +252,7 @@ def post_knowledge_item(page_content: PageForm, db: Session = Depends(get_db)):
 
 @router.post(
     "/file",
-    dependencies=[Permission("post", [(Allow, Authenticated, All)])]
+    dependencies=[Permission("post", [(Allow, Roles.AdminPrincipal, All)])]
 )
 async def post_file(file: UploadFile):
     file_path = Path(file.filename)

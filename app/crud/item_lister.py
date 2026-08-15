@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
 from app.constants import PageTypes, ActivitySettings, PageSubTypes
 from app.crud.chapter_lister import TaxonomyLister
-from app.crud.models.page_dto import PageForm, PagedResult, PageDTO, PageSummaryDTO
+from app.crud.models.page_dto import PageForm, PagedResult, PageDTO
 from app.database import models
 from app.helpers import get_descendants, find_branch_conflict
 from app.render.renderer import PageRenderer
@@ -32,6 +32,12 @@ def compare_sets(old: set, new: set):
     old_set = set(old)
     inter = new_set & old_set
     return CompareResult(new_set - inter, old_set - inter)
+
+
+def _strip_correct_answers(dto: PageDTO) -> None:
+    """Quiz answers must not reveal is_correct outside admin (po-admin) requests."""
+    for answer in dto.answers:
+        answer.is_correct = None
 
 
 class ItemLister:
@@ -126,13 +132,6 @@ class ItemLister:
         self.db.commit()
         return PageDTO.model_validate(item)
 
-    def get_taxonomy_pages(self, taxonomy_id: int) -> list[PageSummaryDTO]:
-        pages = (self.db.query(models.Page)
-                 .join(models.MapPageTaxonomy)
-                 .filter(models.MapPageTaxonomy.id_taxonomy == taxonomy_id)
-                 .all())
-        return [PageSummaryDTO.model_validate(page) for page in pages]
-
     def move_page_taxonomy(self, page_id: int, id_taxonomy_to: int, id_taxonomy_from: int | None) -> PageDTO:
         item = self._get_item(page_id)
 
@@ -169,8 +168,7 @@ class ItemLister:
             selectin_polymorphic(models.Page, [models.QuizPage, models.DocumentPage, models.CalendarPage]),
             joinedload(models.QuizPage.answers)
             .load_only(models.PageAnswer.id, models.PageAnswer.id_answer, models.PageAnswer.answer,
-                       models.PageAnswer.is_correct)  # todo: is_correct, only for frontend
-            ,
+                       models.PageAnswer.is_correct),
             joinedload(models.DocumentPage.media),
             joinedload(models.CalendarPage.date),
             joinedload(models.Page.taxonomies).joinedload(models.MapPageTaxonomy.taxonomy))
@@ -180,7 +178,7 @@ class ItemLister:
             raise ValueError("Page not found")
         return item
 
-    def get_item(self, page_id: int) -> PageDTO:
+    def get_item(self, page_id: int, include_correct_answers: bool = False) -> PageDTO:
         renderer = PageRenderer()
 
         item = self._get_item(page_id)
@@ -195,9 +193,12 @@ class ItemLister:
             if item.document:
                 item.document = renderer.render(item.document)
 
-        return PageDTO.model_validate(item)
+        dto = PageDTO.model_validate(item)
+        if not include_correct_answers:
+            _strip_correct_answers(dto)
+        return dto
 
-    def get_items(self, pagination_no: int = 1) -> PagedResult[PageDTO]:
+    def get_items(self, pagination_no: int = 1, include_correct_answers: bool = False) -> PagedResult[PageDTO]:
         if not pagination_no > 0:
             raise ValueError("Page cannot be less than 1")
         offset = pagination_no - 1
@@ -261,6 +262,9 @@ class ItemLister:
                 tax_map.taxonomy.path = tax_lister.get_taxonomy_tree(tax_map.taxonomy)[1:]
 
         dtos = [PageDTO.model_validate(page) for page in results]
+        if not include_correct_answers:
+            for dto in dtos:
+                _strip_correct_answers(dto)
         if filtered_taxonomy_ids is not None:
             for dto in dtos:
                 dto.taxonomies = [t for t in dto.taxonomies if t.id_taxonomy in filtered_taxonomy_ids]

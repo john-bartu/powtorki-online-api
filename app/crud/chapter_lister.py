@@ -11,19 +11,6 @@ class TaxonomyLister:
         self.db = db
         self.model = model
 
-    def get_item(self, taxonomy_id: int) -> TaxonomyOut:
-        item = (self.db.query(self.model)
-                .options(joinedload(self.model.children))
-                .filter(self.model.id == taxonomy_id)
-                .first())
-
-        if item is None:
-            return None
-
-        tax_tree = self.get_taxonomy_tree(item)[1:]
-        item.path = tax_tree if len(tax_tree) > 0 else []
-        return TaxonomyOut.model_validate(item)
-
     def get_items(self, parent_id: int | None) -> list[TaxonomyOut]:
         items = (self.db.query(self.model).
                  options(joinedload(self.model.children))

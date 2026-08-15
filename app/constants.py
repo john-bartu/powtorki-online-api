@@ -52,6 +52,11 @@ class Roles:
         2: 'user',
     }
 
+    # fastapi_permissions principal for the admin role, e.g. used in ACLs as
+    # (Allow, Roles.AdminPrincipal, All). Matches the "role:{name}" principals
+    # minted in app.routers.auth.login_for_access_token.
+    AdminPrincipal = f"role:{Admin}"
+
 
 class ActivitySettings:
     correct_answer = 1

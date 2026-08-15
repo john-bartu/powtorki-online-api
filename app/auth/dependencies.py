@@ -7,6 +7,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
+from app.constants import Roles
 from app.database import models
 
 SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'replace-me-in-production')
@@ -29,6 +30,7 @@ class TokenData(BaseModel):
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
 
 def verify_password(plain_password, hashed_password) -> bool:
@@ -83,3 +85,22 @@ async def get_current_active_user(current_user: TokenData = Depends(get_current_
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+
+async def get_current_user_optional(token: str | None = Depends(oauth2_scheme_optional)) -> TokenData | None:
+    """Like get_current_user, but returns None instead of 401 when no/invalid token is given.
+
+    For public endpoints that additionally want to know if the caller happens to be an admin,
+    without requiring authentication to use the endpoint at all.
+    """
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return TokenData(**payload.get("data"))
+    except JWTError:
+        return None
+
+
+def is_admin(user: TokenData | None) -> bool:
+    return user is not None and not user.disabled and Roles.AdminPrincipal in user.principals
