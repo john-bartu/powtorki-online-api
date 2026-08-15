@@ -62,3 +62,16 @@ class ActivitySettings:
     correct_answer = 1
     incorrect_answer = -2
     page_read = 0.25
+
+
+class LearningSettings:
+    """Tuning constants for Learning Mode (TestSession) chunk selection."""
+    chunk_size = 5
+    streak_cap = 3
+    # Days a page stays "not due" after N consecutive correct grades (Leitner-style).
+    interval_days = {0: 0, 1: 1, 2: 3, 3: 7}
+    # Relative sampling weight by streak — lower streak = seen more often.
+    base_weight = {0: 5, 1: 3, 2: 2, 3: 1}
+    # Flashcard-graded (swipe/button, self-reported known/unknown) page types.
+    flashcard_types = {PageTypes.CharacterPage, PageTypes.CalendarPage,
+                        PageTypes.DictionaryPage, PageTypes.QAPage}

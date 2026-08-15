@@ -4,7 +4,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import knowledge, auth, quiz, sitemap
+from app.routers import knowledge, auth, quiz, sitemap, test_session
 
 # Configure logging
 logging.basicConfig(
@@ -42,3 +42,4 @@ app.include_router(auth.router)
 app.include_router(quiz.router)
 app.include_router(knowledge.router)
 app.include_router(sitemap.router)
+app.include_router(test_session.router)

@@ -13,6 +13,7 @@ from app.database.models.page import (
     UserActivity
 )
 from app.database.models.page_type import (PageType, PageSubType)
+from app.database.models.test_session import TestSession, TestSessionPage
 from app.database.models.taxonomy import (
     Taxonomy,
     SubjectTaxonomy,

@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from fastapi_permissions import Allow, All
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import TokenData, get_current_user_optional, is_admin
+from app.auth.dependencies import TokenData, get_current_user, get_current_user_optional, is_admin
 from app.auth.permissions import Permission
 from app.constants import Roles
 from app.database import models
@@ -18,6 +18,7 @@ from app.services.models.page_dto import PageForm, PageTaxonomyMoveForm
 from app.services.models.taxonomy_dto import TaxonomyOut, TaxonomyForm
 from app.services.page_service import PageService, TaxonomyBranchConflictError
 from app.services.taxonomy_service import TaxonomyService
+from app.services.test_session_service import TestSessionService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -86,6 +87,13 @@ def get_knowledge_taxonomy_list(types: list[int] = Query(default=[]), db: Sessio
     return crud.search(filter_types=types)
 
 
+@router.get("/taxonomy/{taxonomy_id}/knowledge-stats")
+def get_taxonomy_knowledge_stats(taxonomy_id: int,
+                                 current_user: TokenData = Depends(get_current_user),
+                                 db: Session = Depends(get_db)):
+    return TestSessionService(db).knowledge_stats(current_user.id, taxonomy_id)
+
+
 @router.get("/taxonomy/{taxonomy_id}")
 def get_knowledge_taxonomy_detail(taxonomy_id: int, db: Session = Depends(get_db)):
     taxonomy = TaxonomyService(db, models.Taxonomy).get(taxonomy_id)
@@ -127,7 +135,7 @@ def get_knowledge_pages_list(chapters: list[int] = Query(default=[]),
 def get_knowledge_item(page_id: int,
                        current_user: TokenData | None = Depends(get_current_user_optional),
                        db: Session = Depends(get_db)):
-    page = PageService(db).get_item(page_id, include_correct_answers=is_admin(current_user))
+    page = PageService(db, current_user=current_user).get_item(page_id, include_correct_answers=is_admin(current_user))
     if page is None:
         raise HTTPException(status_code=404, detail="Knowledge page not found")
     else:

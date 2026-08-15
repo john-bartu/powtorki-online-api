@@ -3,6 +3,7 @@ from random import shuffle
 
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
+from app.auth.dependencies import TokenData
 from app.constants import PageTypes, ActivitySettings, PageSubTypes
 from app.database import models
 from app.helpers import get_descendants, find_branch_conflict
@@ -42,9 +43,10 @@ def _strip_correct_answers(dto: PageDTO) -> None:
 
 class PageService:
 
-    def __init__(self, db: Session, limit: int = 20) -> None:
+    def __init__(self, db: Session, limit: int = 20, current_user: TokenData | None = None) -> None:
         self.db = db
         self.pagination_limit = limit
+        self.current_user = current_user
 
         self.filter_taxonomies: list[int] = []
         self.filter_sub_types: list[int] = []
@@ -184,12 +186,13 @@ class PageService:
         item = self._get_item(page_id)
 
         if self.render_enabled:
-            user_activity = models.UserActivity()
-            user_activity.id_user = 1
-            user_activity.id_page = item.id
-            user_activity.knowledge = ActivitySettings.page_read
-            self.db.add(user_activity)
-            self.db.commit()
+            if self.current_user is not None:
+                user_activity = models.UserActivity()
+                user_activity.id_user = self.current_user.id
+                user_activity.id_page = item.id
+                user_activity.knowledge = ActivitySettings.page_read
+                self.db.add(user_activity)
+                self.db.commit()
             if item.document:
                 item.document = renderer.render(item.document)
 
