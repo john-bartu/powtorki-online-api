@@ -4,12 +4,17 @@ import logging
 from sqlalchemy.orm import Session, joinedload, selectin_polymorphic
 
 from app.constants import PageTypes, ActivitySettings, PageSubTypes
-from app.crud.models.page_dto import PageForm, PagedResult, PageDTO
+from app.crud.chapter_lister import TaxonomyLister
+from app.crud.models.page_dto import PageForm, PagedResult, PageDTO, PageSummaryDTO
 from app.database import models
-from app.helpers import get_descendants
+from app.helpers import get_descendants, find_branch_conflict
 from app.render.renderer import PageRenderer
 
 logger = logging.getLogger(__name__)
+
+
+class TaxonomyBranchConflictError(ValueError):
+    pass
 
 
 class CompareResult:
@@ -41,6 +46,17 @@ class ItemLister:
         self.filter_name: str = ""
         self.render_enabled = True
 
+    def _raise_if_branch_conflict(self, taxonomy_ids: list[int]):
+        conflict = find_branch_conflict(self.db, taxonomy_ids)
+        if conflict is None:
+            return
+        id_a, id_b = conflict
+        names = dict(self.db.query(models.Taxonomy.id, models.Taxonomy.name)
+                     .filter(models.Taxonomy.id.in_([id_a, id_b])).all())
+        raise TaxonomyBranchConflictError(
+            f"Strona jest już przypisana w tej samej gałęzi taksonomii: "
+            f"\"{names.get(id_a, id_a)}\" i \"{names.get(id_b, id_b)}\"")
+
     def set_from_form(self, item: models.Page | models.QuizPage | models.CalendarPage, form: PageForm):
         item.title = form.title
         item.document = form.document
@@ -52,6 +68,8 @@ class ItemLister:
 
         current_taxonomy_ids = [tax.id_taxonomy for tax in item.taxonomies]
         form_taxonomy_ids = [tax.id_taxonomy for tax in form.taxonomies]
+
+        self._raise_if_branch_conflict(form_taxonomy_ids)
 
         difference = compare_sets(set(current_taxonomy_ids), set(form_taxonomy_ids))
 
@@ -105,6 +123,33 @@ class ItemLister:
     def put_item(self, page_id: int, form):
         item = self._get_item(page_id)
         item = self.set_from_form(item, form)
+        self.db.commit()
+        return PageDTO.model_validate(item)
+
+    def get_taxonomy_pages(self, taxonomy_id: int) -> list[PageSummaryDTO]:
+        pages = (self.db.query(models.Page)
+                 .join(models.MapPageTaxonomy)
+                 .filter(models.MapPageTaxonomy.id_taxonomy == taxonomy_id)
+                 .all())
+        return [PageSummaryDTO.model_validate(page) for page in pages]
+
+    def move_page_taxonomy(self, page_id: int, id_taxonomy_to: int, id_taxonomy_from: int | None) -> PageDTO:
+        item = self._get_item(page_id)
+
+        current_ids = [tax.id_taxonomy for tax in item.taxonomies]
+        resulting_ids = [tid for tid in current_ids if tid != id_taxonomy_from]
+        if id_taxonomy_to not in resulting_ids:
+            resulting_ids.append(id_taxonomy_to)
+
+        self._raise_if_branch_conflict(resulting_ids)
+
+        if id_taxonomy_from is not None:
+            for tax in [t for t in item.taxonomies if t.id_taxonomy == id_taxonomy_from]:
+                self.db.delete(tax)
+
+        if id_taxonomy_to not in current_ids:
+            item.taxonomies.append(models.MapPageTaxonomy(id_taxonomy=id_taxonomy_to))
+
         self.db.commit()
         return PageDTO.model_validate(item)
 
@@ -169,10 +214,11 @@ class ItemLister:
             joinedload(models.CalendarPage.date),
             joinedload(models.Page.taxonomies)))
 
+        filtered_taxonomy_ids: set[int] | None = None
         if len(self.filter_taxonomies) > 0:
-            taxonomies = [get_descendants(self.db, [taxonomy]) for taxonomy in self.filter_taxonomies][0]
+            filtered_taxonomy_ids = set(get_descendants(self.db, [self.filter_taxonomies[0]]))
             query = query.filter(
-                models.MapPageTaxonomy.id_taxonomy.in_(taxonomies),
+                models.MapPageTaxonomy.id_taxonomy.in_(filtered_taxonomy_ids),
             )
 
         if len(self.filter_page_types) > 0:
@@ -209,4 +255,14 @@ class ItemLister:
             if page.id_type == PageTypes.QuizPage:
                 shuffle(page.answers)
 
-        return PagedResult(items=[PageDTO.model_validate(page) for page in results], total_number=total_number)
+        tax_lister = TaxonomyLister(self.db)
+        for page in results:
+            for tax_map in page.taxonomies:
+                tax_map.taxonomy.path = tax_lister.get_taxonomy_tree(tax_map.taxonomy)[1:]
+
+        dtos = [PageDTO.model_validate(page) for page in results]
+        if filtered_taxonomy_ids is not None:
+            for dto in dtos:
+                dto.taxonomies = [t for t in dto.taxonomies if t.id_taxonomy in filtered_taxonomy_ids]
+
+        return PagedResult(items=dtos, total_number=total_number)

@@ -13,8 +13,8 @@ from sqlalchemy.orm import Session
 from app.auth.permissions import Permission
 from app.constants import PageTypes, KnowledgeTypes
 from app.crud.chapter_lister import TaxonomyLister
-from app.crud.item_lister import ItemLister
-from app.crud.models.page_dto import PageForm
+from app.crud.item_lister import ItemLister, TaxonomyBranchConflictError
+from app.crud.models.page_dto import PageForm, PageTaxonomyMoveForm, PageSummaryDTO
 from app.crud.models.taxonomy_dto import TaxonomyOut, TaxonomyForm
 from app.database import models
 from app.database.database import get_db
@@ -141,6 +141,25 @@ def get_knowledge_chapter(chapter_id: int = None, db: Session = Depends(get_db))
     return chapter
 
 
+@router.get(
+    "/taxonomy/{taxonomy_id}/pages",
+    response_model=list[PageSummaryDTO],
+)
+def get_taxonomy_pages(taxonomy_id: int, db: Session = Depends(get_db)):
+    return ItemLister(db).get_taxonomy_pages(taxonomy_id)
+
+
+@router.put(
+    "/taxonomy/{taxonomy_id}/pages/{page_id}",
+    dependencies=[Permission("put", [(Allow, Authenticated, All)])]
+)
+def move_taxonomy_page(taxonomy_id: int, page_id: int, form: PageTaxonomyMoveForm, db: Session = Depends(get_db)):
+    try:
+        return ItemLister(db).move_page_taxonomy(page_id, taxonomy_id, form.id_taxonomy_from)
+    except TaxonomyBranchConflictError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
 @router.get("/pages")
 def get_knowledge_pages_list(types: list[int | str] = Query(default=[]),
                        chapters: list[int] = Query(default=[]),
@@ -206,7 +225,10 @@ def get_knowledge_item(page_id: int, db: Session = Depends(get_db)):
 def put_knowledge_item(page_id: int, page_content: PageForm, db: Session = Depends(get_db)):
     lister = ItemLister(db)
     lister.render_enabled = False
-    page = lister.put_item(page_id, page_content)
+    try:
+        page = lister.put_item(page_id, page_content)
+    except TaxonomyBranchConflictError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     if page is None:
         raise HTTPException(status_code=404, detail="Knowledge page not found")
     else:
@@ -232,7 +254,10 @@ def delete_knowledge_item(page_id: int, db: Session = Depends(get_db)):
     dependencies=[Permission("post", [(Allow, Authenticated, All)])]
 )
 def post_knowledge_item(page_content: PageForm, db: Session = Depends(get_db)):
-    page = ItemLister(db).post_item(page_content)
+    try:
+        page = ItemLister(db).post_item(page_content)
+    except TaxonomyBranchConflictError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     if page is None:
         raise HTTPException(status_code=404, detail="Knowledge page not found")
     else:

@@ -7,6 +7,10 @@ class TaxonomyMapForm(BaseModel):
     id_taxonomy: int
 
 
+class PageTaxonomyMoveForm(BaseModel):
+    id_taxonomy_from: int | None = None
+
+
 class AnswerMapForm(BaseModel):
     answer: str
     is_correct: bool
@@ -63,6 +67,13 @@ class DateDTO(BaseModel):
     id: int
     date_number: int
     date_text: str
+
+
+class PageSummaryDTO(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    title: str
+    id_sub_type: int
 
 
 class PageDTO(BaseModel):

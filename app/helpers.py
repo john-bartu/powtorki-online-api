@@ -38,5 +38,15 @@ def get_whole_branch(db: Session, chapter_ids: list[int]):
     return {*get_descendants(db, chapter_ids), *get_ancestors(db, chapter_ids)}
 
 
+def find_branch_conflict(db: Session, taxonomy_ids: list[int]) -> tuple[int, int] | None:
+    """Returns a pair of ids from taxonomy_ids that share an ancestor/descendant branch (or are equal), or None."""
+    for taxonomy_id in taxonomy_ids:
+        branch = get_whole_branch(db, [taxonomy_id])
+        for other_id in taxonomy_ids:
+            if other_id != taxonomy_id and other_id in branch:
+                return taxonomy_id, other_id
+    return None
+
+
 def get_subjects(db: Session, chapter_ids: list[int]):
     return set([chapter for chapter in get_ancestors(db, chapter_ids) if chapter[2] == TaxonomyTypes.SubjectTaxonomy])
