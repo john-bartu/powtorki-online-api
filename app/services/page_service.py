@@ -68,6 +68,7 @@ class PageService:
     def set_from_form(self, item: models.Page | models.QuizPage | models.CalendarPage, form: PageForm):
         item.title = form.title
         item.document = form.document
+        item.document_json = form.document_json
         item.note = form.note
         item.description = form.description
         item.id_type = form.id_type

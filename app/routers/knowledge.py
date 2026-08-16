@@ -114,19 +114,20 @@ def move_taxonomy_page(taxonomy_id: int, page_id: int, form: PageTaxonomyMoveFor
 
 
 @router.get("/pages")
-def get_knowledge_pages_list(chapters: list[int] = Query(default=[]),
+def get_knowledge_pages_list(taxonomies: list[int] = Query(default=[]),
                              sub_types: list[int] = Query(default=[]),
                              query: str = Query(default=""),
                              page_no: int = 1,
+                             limit: int = 20,
                              current_user: TokenData | None = Depends(get_current_user_optional),
                              db: Session = Depends(get_db)):
-    paginator = PageService(db)
+    paginator = PageService(db, limit=limit)
 
     if query != "":
         paginator.filter_name = query
 
     paginator.filter_sub_types = sub_types
-    paginator.filter_taxonomies = chapters
+    paginator.filter_taxonomies = taxonomies
 
     return paginator.get_items(page_no, include_correct_answers=is_admin(current_user))
 

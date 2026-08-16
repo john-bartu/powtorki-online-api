@@ -1,6 +1,6 @@
 import json
 
-from sqlalchemy import Column, Integer, String, VARCHAR, ForeignKey, DateTime, func, Float
+from sqlalchemy import Column, Integer, String, VARCHAR, ForeignKey, DateTime, func, Float, JSON
 from sqlalchemy.orm import relationship
 
 from app.constants import PageTypes
@@ -18,6 +18,7 @@ class Page(Base):
     order_no = Column(Integer)
     title = Column(VARCHAR(255))
     document = Column(String)
+    document_json = Column(JSON)
     description = Column(VARCHAR(255))
     note = Column(VARCHAR(255))
 

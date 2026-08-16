@@ -30,6 +30,7 @@ class PageForm(BaseModel):
     id_sub_type: int
     title: str
     document: str | None
+    document_json: dict | None = None
     description: str | None
     note: str | None
 
@@ -80,6 +81,7 @@ class PageDTO(BaseModel):
     order_no: int | None = None
     title: str
     document: str | None = None
+    document_json: dict | None = None
     description: str | None = None
     note: str | None = None
     taxonomies: List[MapPageTaxonomyDTO] = []
