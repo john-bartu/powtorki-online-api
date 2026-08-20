@@ -155,6 +155,15 @@ class PageService:
         self.db.commit()
         return PageDTO.model_validate(item)
 
+    def remove_page_taxonomy(self, page_id: int, id_taxonomy: int) -> PageDTO:
+        item = self._get_item(page_id)
+
+        for tax in [t for t in item.taxonomies if t.id_taxonomy == id_taxonomy]:
+            self.db.delete(tax)
+
+        self.db.commit()
+        return PageDTO.model_validate(item)
+
     def delete_item(self, page_id: int):
         try:
             item = self._get_item(page_id)

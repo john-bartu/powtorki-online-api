@@ -23,6 +23,10 @@ class TaxonomyService:
                                .group_by(models.Page.id_sub_type)
                                .all())
         item.pages = {page_type[0]: {'count': page_type[1]} for page_type in page_count_per_type}
+
+        tax_tree = self.get_taxonomy_tree(item)[1:]
+        item.path = tax_tree if len(tax_tree) > 0 else []
+
         return item
 
     def get_items(self, parent_id: int | None) -> list[TaxonomyOut]:

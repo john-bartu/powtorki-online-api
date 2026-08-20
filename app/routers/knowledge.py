@@ -113,6 +113,14 @@ def move_taxonomy_page(taxonomy_id: int, page_id: int, form: PageTaxonomyMoveFor
         raise HTTPException(status_code=409, detail=str(e))
 
 
+@router.delete(
+    "/taxonomy/{taxonomy_id}/pages/{page_id}",
+    dependencies=[Permission("put", [(Allow, Roles.AdminPrincipal, All)])]
+)
+def remove_taxonomy_page(taxonomy_id: int, page_id: int, db: Session = Depends(get_db)):
+    return PageService(db).remove_page_taxonomy(page_id, taxonomy_id)
+
+
 @router.get("/pages")
 def get_knowledge_pages_list(taxonomies: list[int] = Query(default=[]),
                              sub_types: list[int] = Query(default=[]),
