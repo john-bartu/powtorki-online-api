@@ -132,3 +132,5 @@ dmypy.json
 
 importer/dump/*
 file-upload/*
+
+node_modules
